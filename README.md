@@ -1,2 +1,9 @@
-# scoreboard
-Collect scores of sports games from api and display them on a monitor using raspberry pi
+# Scoreboard
+Collect scores of sports games from ESPN api and display them on an RGB LED monitor using a Raspberry Pi
+
+# Retrieving scores
+`python3 getScores.py`
+
+# Read scores to LED Matrix
+`
+
