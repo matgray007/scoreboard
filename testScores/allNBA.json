@@ -1,0 +1,169 @@
+{
+  "games": [
+    {
+      "shortName": "LAL @ GSW",
+      "status": "in",
+      "period": 2,
+      "displayClock": "5:42",
+      "date": "2026-01-31T03:00Z",
+      "competitors": [
+        {"displayName": "Golden State Warriors", "score": "48"},
+        {"displayName": "Los Angeles Lakers", "score": "52"}
+      ]
+    },
+    {
+      "shortName": "LAC @ SAC",
+      "status": "in",
+      "period": 3,
+      "displayClock": "8:15",
+      "date": "2026-01-31T03:00Z",
+      "competitors": [
+        {"displayName": "Sacramento Kings", "score": "67"},
+        {"displayName": "Los Angeles Clippers", "score": "71"}
+      ]
+    },
+    {
+      "shortName": "PHX @ POR",
+      "status": "final",
+      "period": 4,
+      "displayClock": "0:00",
+      "date": "2026-01-31T03:00Z",
+      "competitors": [
+        {"displayName": "Portland Trail Blazers", "score": "98"},
+        {"displayName": "Phoenix Suns", "score": "112"}
+      ]
+    },
+    {
+      "shortName": "DEN @ UTA",
+      "status": "in",
+      "period": 1,
+      "displayClock": "3:22",
+      "date": "2026-01-31T02:00Z",
+      "competitors": [
+        {"displayName": "Utah Jazz", "score": "18"},
+        {"displayName": "Denver Nuggets", "score": "24"}
+      ]
+    },
+    {
+      "shortName": "MIN @ OKC",
+      "status": "in",
+      "period": 4,
+      "displayClock": "6:45",
+      "date": "2026-01-31T01:00Z",
+      "competitors": [
+        {"displayName": "Oklahoma City Thunder", "score": "102"},
+        {"displayName": "Minnesota Timberwolves", "score": "95"}
+      ]
+    },
+    {
+      "shortName": "DAL @ SAS",
+      "status": "final",
+      "period": 4,
+      "displayClock": "0:00",
+      "date": "2026-01-31T01:30Z",
+      "competitors": [
+        {"displayName": "San Antonio Spurs", "score": "107"},
+        {"displayName": "Dallas Mavericks", "score": "114"}
+      ]
+    },
+    {
+      "shortName": "HOU @ MEM",
+      "status": "in",
+      "period": 2,
+      "displayClock": "10:18",
+      "date": "2026-01-31T01:00Z",
+      "competitors": [
+        {"displayName": "Memphis Grizzlies", "score": "41"},
+        {"displayName": "Houston Rockets", "score": "38"}
+      ]
+    },
+    {
+      "shortName": "NOP @ MIL",
+      "status": "in",
+      "period": 3,
+      "displayClock": "2:56",
+      "date": "2026-01-31T00:00Z",
+      "competitors": [
+        {"displayName": "Milwaukee Bucks", "score": "73"},
+        {"displayName": "New Orleans Pelicans", "score": "68"}
+      ]
+    },
+    {
+      "shortName": "CHI @ DET",
+      "status": "final",
+      "period": 4,
+      "displayClock": "0:00",
+      "date": "2026-01-30T23:00Z",
+      "competitors": [
+        {"displayName": "Detroit Pistons", "score": "92"},
+        {"displayName": "Chicago Bulls", "score": "105"}
+      ]
+    },
+    {
+      "shortName": "CLE @ IND",
+      "status": "in",
+      "period": 1,
+      "displayClock": "7:33",
+      "date": "2026-01-31T00:00Z",
+      "competitors": [
+        {"displayName": "Indiana Pacers", "score": "12"},
+        {"displayName": "Cleveland Cavaliers", "score": "15"}
+      ]
+    },
+    {
+      "shortName": "TOR @ ATL",
+      "status": "in",
+      "period": 2,
+      "displayClock": "4:27",
+      "date": "2026-01-30T23:30Z",
+      "competitors": [
+        {"displayName": "Atlanta Hawks", "score": "44"},
+        {"displayName": "Toronto Raptors", "score": "39"}
+      ]
+    },
+    {
+      "shortName": "MIA @ ORL",
+      "status": "final",
+      "period": 4,
+      "displayClock": "0:00",
+      "date": "2026-01-30T23:00Z",
+      "competitors": [
+        {"displayName": "Orlando Magic", "score": "118"},
+        {"displayName": "Miami Heat", "score": "110"}
+      ]
+    },
+    {
+      "shortName": "BOS @ PHI",
+      "status": "in",
+      "period": 4,
+      "displayClock": "9:12",
+      "date": "2026-01-31T00:00Z",
+      "competitors": [
+        {"displayName": "Philadelphia 76ers", "score": "96"},
+        {"displayName": "Boston Celtics", "score": "103"}
+      ]
+    },
+    {
+      "shortName": "BKN @ NYK",
+      "status": "in",
+      "period": 3,
+      "displayClock": "1:48",
+      "date": "2026-01-31T00:30Z",
+      "competitors": [
+        {"displayName": "New York Knicks", "score": "79"},
+        {"displayName": "Brooklyn Nets", "score": "72"}
+      ]
+    },
+    {
+      "shortName": "WAS @ CHA",
+      "status": "final",
+      "period": 4,
+      "displayClock": "0:00",
+      "date": "2026-01-30T23:00Z",
+      "competitors": [
+        {"displayName": "Charlotte Hornets", "score": "115"},
+        {"displayName": "Washington Wizards", "score": "108"}
+      ]
+    }
+  ]
+}

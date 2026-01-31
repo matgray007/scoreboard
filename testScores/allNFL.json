@@ -1,0 +1,180 @@
+{
+  "games": [
+    {
+      "shortName": "SEA @ SF",
+      "status": "in",
+      "period": 2,
+      "displayClock": "2:29",
+      "date": "2026-01-04T01:00Z",
+      "competitors": [
+        {"displayName": "San Francisco 49ers", "score": "0"},
+        {"displayName": "Seattle Seahawks", "score": "7"}
+      ]
+    },
+    {
+      "shortName": "MIN @ CHI",
+      "status": "in",
+      "period": 2,
+      "displayClock": "12:29",
+      "date": "2026-01-04T01:00Z",
+      "competitors": [
+        {"displayName": "Chicago Bears", "score": "22"},
+        {"displayName": "Minnesota Vikings", "score": "10"}
+      ]
+    },
+    {
+      "shortName": "GB @ DET",
+      "status": "in",
+      "period": 3,
+      "displayClock": "8:15",
+      "date": "2026-01-04T18:00Z",
+      "competitors": [
+        {"displayName": "Detroit Lions", "score": "17"},
+        {"displayName": "Green Bay Packers", "score": "14"}
+      ]
+    },
+    {
+      "shortName": "LAR @ ARI",
+      "status": "final",
+      "period": 4,
+      "displayClock": "0:00",
+      "date": "2026-01-04T21:25Z",
+      "competitors": [
+        {"displayName": "Arizona Cardinals", "score": "24"},
+        {"displayName": "Los Angeles Rams", "score": "21"}
+      ]
+    },
+    {
+      "shortName": "DAL @ PHI",
+      "status": "in",
+      "period": 1,
+      "displayClock": "5:42",
+      "date": "2026-01-04T13:00Z",
+      "competitors": [
+        {"displayName": "Philadelphia Eagles", "score": "3"},
+        {"displayName": "Dallas Cowboys", "score": "0"}
+      ]
+    },
+    {
+      "shortName": "NYG @ WAS",
+      "status": "final",
+      "period": 4,
+      "displayClock": "0:00",
+      "date": "2026-01-04T17:00Z",
+      "competitors": [
+        {"displayName": "Washington Commanders", "score": "28"},
+        {"displayName": "New York Giants", "score": "17"}
+      ]
+    },
+    {
+      "shortName": "TB @ CAR",
+      "status": "in",
+      "period": 4,
+      "displayClock": "3:18",
+      "date": "2026-01-04T13:00Z",
+      "competitors": [
+        {"displayName": "Carolina Panthers", "score": "13"},
+        {"displayName": "Tampa Bay Buccaneers", "score": "20"}
+      ]
+    },
+    {
+      "shortName": "NO @ ATL",
+      "status": "in",
+      "period": 2,
+      "displayClock": "0:45",
+      "date": "2026-01-04T13:00Z",
+      "competitors": [
+        {"displayName": "Atlanta Falcons", "score": "14"},
+        {"displayName": "New Orleans Saints", "score": "7"}
+      ]
+    },
+    {
+      "shortName": "BUF @ MIA",
+      "status": "final",
+      "period": 4,
+      "displayClock": "0:00",
+      "date": "2026-01-04T13:00Z",
+      "competitors": [
+        {"displayName": "Miami Dolphins", "score": "31"},
+        {"displayName": "Buffalo Bills", "score": "27"}
+      ]
+    },
+    {
+      "shortName": "NE @ NYJ",
+      "status": "in",
+      "period": 3,
+      "displayClock": "10:22",
+      "date": "2026-01-04T13:00Z",
+      "competitors": [
+        {"displayName": "New York Jets", "score": "17"},
+        {"displayName": "New England Patriots", "score": "10"}
+      ]
+    },
+    {
+      "shortName": "BAL @ PIT",
+      "status": "in",
+      "period": 1,
+      "displayClock": "14:58",
+      "date": "2026-01-04T20:15Z",
+      "competitors": [
+        {"displayName": "Pittsburgh Steelers", "score": "0"},
+        {"displayName": "Baltimore Ravens", "score": "0"}
+      ]
+    },
+    {
+      "shortName": "CLE @ CIN",
+      "status": "final",
+      "period": 4,
+      "displayClock": "0:00",
+      "date": "2026-01-04T13:00Z",
+      "competitors": [
+        {"displayName": "Cincinnati Bengals", "score": "34"},
+        {"displayName": "Cleveland Browns", "score": "20"}
+      ]
+    },
+    {
+      "shortName": "TEN @ JAX",
+      "status": "in",
+      "period": 2,
+      "displayClock": "7:33",
+      "date": "2026-01-04T13:00Z",
+      "competitors": [
+        {"displayName": "Jacksonville Jaguars", "score": "14"},
+        {"displayName": "Tennessee Titans", "score": "10"}
+      ]
+    },
+    {
+      "shortName": "HOU @ IND",
+      "status": "in",
+      "period": 4,
+      "displayClock": "11:05",
+      "date": "2026-01-04T13:00Z",
+      "competitors": [
+        {"displayName": "Indianapolis Colts", "score": "21"},
+        {"displayName": "Houston Texans", "score": "24"}
+      ]
+    },
+    {
+      "shortName": "KC @ DEN",
+      "status": "final",
+      "period": 4,
+      "displayClock": "0:00",
+      "date": "2026-01-04T16:25Z",
+      "competitors": [
+        {"displayName": "Denver Broncos", "score": "16"},
+        {"displayName": "Kansas City Chiefs", "score": "19"}
+      ]
+    },
+    {
+      "shortName": "LV @ LAC",
+      "status": "in",
+      "period": 3,
+      "displayClock": "4:52",
+      "date": "2026-01-04T16:25Z",
+      "competitors": [
+        {"displayName": "Los Angeles Chargers", "score": "23"},
+        {"displayName": "Las Vegas Raiders", "score": "17"}
+      ]
+    }
+  ]
+}

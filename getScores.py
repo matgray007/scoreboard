@@ -24,13 +24,15 @@ def getScores(liveOnly, sport):
         # status- pre: prior to game started; in: game is live; post: game has ended
         for competition in game['competitions']:
             for competitor in competition['competitors']:
-                currObj['competitors'].append({'displayName': competitor['team']['displayName'], 'score': competitor['score']})
+                currObj['competitors'].append({'displayName': competitor['team']['displayName'], 'score': competitor['score'], 'homeAway': competitor['homeAway']})
         games.append(currObj)
     if liveOnly:
         json['games'] = list(filter(lambda x: x['status'] == 'in', games))
     else:
         json['games'] = games
     return json
+
+# TODO: Retain who has the ball, down and distance, and timeouts remaining
 
 
 

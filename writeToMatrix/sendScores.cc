@@ -112,16 +112,24 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, InterruptHandler);
 
     // Geometry values
+    int width = offscreen->width();
+    int height = offscreen->height();
+    int team_letter_width = 5; // 5 pixels per letter in medium font
+    int team_letter_height = 8;
+    int score_letter_width = 8; // 8 pixels per letter in large font
+    int score_letter_height = 13;
+
     int time_x = 22;
     int time_y = 4;
     int period_x = time_x + 8;
     int period_y = 8 + time_y;
     int team1_x = 1;
-    int team2_x = 48;
+    int team2_x = offscreen->width() - (3 * 5); // 4 characters max, 6 pixels each
     int team_y = 0;
     int score1_x = team1_x - 1;
     int score2_x = team2_x - 1;
     int score_y = 12;
+    std::cout << offscreen->width() << "x" << offscreen->height() << std::endl;
     
 
     // Main loop to keep the program running
@@ -131,6 +139,9 @@ int main(int argc, char *argv[]) {
 
         // Loop through each game in current_scores
         for (const auto& game : current_scores["games"]) {
+            if (interrupt_received) {
+                break;
+            }
             offscreen->Fill(0, 0, 0);
 
             // Extract game details
@@ -178,17 +189,20 @@ int main(int argc, char *argv[]) {
             // TODO: When team name is 2 letters, add 2 or 3 pixel offset
             // Second team name top right
             rgb_matrix::DrawText(offscreen, medium_font,
-                           team2_x, team_y + medium_font.baseline(),
+                           team2_x + (abs(secondTeam.length() - 3) * team_letter_width), team_y + medium_font.baseline(),
                            secondPrimaryColor, NULL, secondTeam.c_str(),
-                           0); 
+                           0);  // x value adjusted for right alignment when only 2 letter team names
             // Second team score middle left
             rgb_matrix::DrawText(offscreen, large_font,
-                           score2_x, score_y + large_font.baseline(),
+                           score2_x - ((secondScore.length() - 2) * score_letter_width), score_y + large_font.baseline(),
                            secondSecondaryColor, NULL, secondScore.c_str(),
-                           0);
+                           0); // x value adjusted for right alignment
 
-            // TODO: Make colon 2x2 so it can be centered?
+            // TODO: For NBA games, figure out what to do about when clock goes below 1 minute (5.9, 59.4, etc.)
             // Game clock top center
+            if (displayClock.length() == 4) {
+                displayClock = "0" + displayClock;
+            }
             rgb_matrix::DrawText(offscreen, small_font,
                            time_x, time_y + small_font.baseline(),
                            white, NULL, displayClock.c_str(),
