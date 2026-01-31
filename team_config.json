@@ -222,5 +222,54 @@
             "primary": [90, 20, 20],
             "secondary": [255, 182, 18]
         }
+    },
+    "Atlanta Hawks": {
+        "shortName": "ATL",
+        "colors": {
+            "primary": [225, 68, 52],
+            "secondary": [196, 214, 0]
+        }
+    }, 
+    "Boston Celtics": {
+        "shortName": "BOS",
+        "colors": {
+            "primary": [0, 122, 51],
+            "secondary": [139, 111, 78]
+        }
+    },
+    "Brooklyn Nets": {
+        "shortName": "BKN",
+        "colors": {
+            "primary": [20, 20, 20],
+            "secondary": [255, 255, 255]
+        }
+    },
+    "Charlotte Hornets": {
+        "shortName": "CHA",
+        "colors": {
+            "primary": [29, 17, 96],
+            "secondary": [0, 120, 140]
+        }
+    },
+    "Chicago Bulls": {
+        "shortName": "CHI",
+        "colors": {
+            "primary": [206, 17, 65],
+            "secondary": [0, 0, 0]
+        }
+    },
+    "Cleveland Cavaliers": {
+        "shortName": "CLE",
+        "colors": {
+            "primary": [134, 0, 56],
+            "secondary": [253, 187, 48]
+        }
+    },
+    "Dallas Mavericks": {
+        "shortName": "DAL",
+        "colors": {
+            "primary": [0, 83, 188],
+            "secondary": [0, 43, 92]
+        }
     }
 }
