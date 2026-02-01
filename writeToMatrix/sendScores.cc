@@ -78,7 +78,6 @@ int main(int argc, char *argv[]) {
 
     // Load in team config
     Json::Value config = readTeamConfig();
-    std::cout << config << std::endl;
     // i.e. config["Arizona Cardinals"]["shortName"]
 
     // Load font for displaying text
@@ -114,6 +113,8 @@ int main(int argc, char *argv[]) {
     // Geometry values
     int width = offscreen->width();
     int height = offscreen->height();
+    int clock_letter_width = 4;
+    int clock_letter_height = 6;
     int team_letter_width = 5; // 5 pixels per letter in medium font
     int team_letter_height = 8;
     int score_letter_width = 8; // 8 pixels per letter in large font
@@ -129,7 +130,6 @@ int main(int argc, char *argv[]) {
     int score1_x = team1_x - 1;
     int score2_x = team2_x - 1;
     int score_y = 12;
-    std::cout << offscreen->width() << "x" << offscreen->height() << std::endl;
     
 
     // Main loop to keep the program running
@@ -147,8 +147,12 @@ int main(int argc, char *argv[]) {
             // Extract game details
             std::string period = game["period"].asString();
             std::string displayClock = game["displayClock"].asString();
-            std::string firstTeamLong = game["competitors"][0]["displayName"].asString();
-            std::string secondTeamLong = game["competitors"][1]["displayName"].asString();
+            std::string status = game["status"].asString();
+
+            int firstTeamInd = game["competitors"][0]["homeAway"].asString() == "home" ? 1 : 0;
+            int secondTeamInd = firstTeamInd == 0 ? 1 : 0;
+            std::string firstTeamLong = game["competitors"][firstTeamInd]["displayName"].asString();
+            std::string secondTeamLong = game["competitors"][secondTeamInd]["displayName"].asString();
             std::string firstTeam = config[firstTeamLong]["shortName"].asString();
             std::string secondTeam = config[secondTeamLong]["shortName"].asString();
             std::string firstScore = game["competitors"][0]["score"].asString();
@@ -197,22 +201,42 @@ int main(int argc, char *argv[]) {
                            score2_x - ((secondScore.length() - 2) * score_letter_width), score_y + large_font.baseline(),
                            secondSecondaryColor, NULL, secondScore.c_str(),
                            0); // x value adjusted for right alignment
-
-            // TODO: For NBA games, figure out what to do about when clock goes below 1 minute (5.9, 59.4, etc.)
+                           
             // Game clock top center
-            if (displayClock.length() == 4) {
-                displayClock = "0" + displayClock;
-            }
-            rgb_matrix::DrawText(offscreen, small_font,
+            // Live game
+            if (status == "in") {
+                // Appends a leading zero if 00:59.9 < time < 10:00 
+                if (displayClock.length() == 4 && displayClock.find(":") != std::string::npos) {
+                    displayClock = "0" + displayClock;
+                }
+                // For NBA, when time is 0.0 <= time < 10.0, we need to shift it to the right by one character
+                if (displayClock.length() == 3) {
+                    rgb_matrix::DrawText(offscreen, small_font,
+                            time_x + clock_letter_width, time_y + small_font.baseline(),
+                            white, NULL, displayClock.c_str(),
+                            0); 
+                } else {
+                    rgb_matrix::DrawText(offscreen, small_font,
+                            time_x, time_y + small_font.baseline(),
+                            white, NULL, displayClock.c_str(),
+                            0); 
+                }
+                // Period middle center
+                rgb_matrix::DrawText(offscreen, small_font,
+                            period_x, period_y + small_font.baseline(),
+                            white, NULL, period.c_str(),
+                            0);
+            } else if (status == "post") { // Ended game
+                rgb_matrix::DrawText(offscreen, small_font,
                            time_x, time_y + small_font.baseline(),
-                           white, NULL, displayClock.c_str(),
-                           0); 
-
-            // Period middle center
-            rgb_matrix::DrawText(offscreen, small_font,
-                           period_x, period_y + small_font.baseline(),
-                           white, NULL, period.c_str(),
+                           white, NULL, "FINAL",
                            0);
+            }
+            
+            
+            
+
+            
             
             // Double buffer swap
             offscreen = matrix->SwapOnVSync(offscreen);
