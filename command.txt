@@ -3,3 +3,7 @@ sudo ./demo -D 1 runtext.ppm --led-rows=32 --led-cols=64 --led-limit-refresh=60 
 sudo python runtext.py -m=adafruit-hat --led-rows=32 --led-cols=64 --led-slowdown-gpio=4 --text="Hello"
 
 sudo ./pixel-mover --led-rows=32 --led-cols=64 --led-limit-refresh=60 --led-slowdown-gpio=2 --led-gpio-mapping=adafruit-hat
+
+
+
+sudo ./sendScores.exe --led-rows=32 --led-cols=64 --led-limit-refresh=60 --led-slowdown-gpio=2 --led-gpio-mapping=adafruit-hat

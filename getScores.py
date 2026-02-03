@@ -26,10 +26,10 @@ def getScores(liveOnly, sport):
             for competitor in competition['competitors']:
                 currObj['competitors'].append({'displayName': competitor['team']['displayName'], 'score': competitor['score'], 'homeAway': competitor['homeAway']})
         games.append(currObj)
-    if liveOnly:
+    if liveOnly: # Only games that are currently in progress
         json['games'] = list(filter(lambda x: x['status'] == 'in', games))
-    else:
-        json['games'] = games
+    else: # Games that are in progress or have ended
+        json['games'] = list(filter(lambda x: x['status'] == 'in' or x['status'] == 'post', games))
     return json
 
 # TODO: Retain who has the ball, down and distance, and timeouts remaining
@@ -44,4 +44,4 @@ while True:
     with open('currentScores.json', 'w') as file:
         file.write(dumps(currScores))
 
-    time.sleep(10)
+    time.sleep(20)
