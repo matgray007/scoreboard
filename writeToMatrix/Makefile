@@ -12,6 +12,8 @@ LIBS 			= -L$(RGB_MATRIX_DIR)/lib
 # Flags
 CXXFLAGS = -Wall -std=c++11 -O2 $(INCLUDES) `pkg-config --cflags jsoncpp`
 LDFLAGS  = $(LIBS) -lrgbmatrix -lpthread -lm -lrt `pkg-config --libs jsoncpp`
+MAGICK_CXXFLAGS?=$(shell GraphicsMagick++-config --cppflags --cxxflags)
+MAGICK_LDFLAGS?=$(shell GraphicsMagick++-config --ldflags --libs)
 
 # Target
 TARGET = sendScores.exe
@@ -25,10 +27,10 @@ OBJS = $(SRCS:.cc=.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(MAGICK_LDFLAGS)
 
 %.o: %.cc
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(MAGICK_CXXFLAGS) -c $< -o $@
 
 clean:
 	$(RM) $(OBJS) $(TARGET)
