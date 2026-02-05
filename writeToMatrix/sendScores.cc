@@ -13,6 +13,29 @@
 #include <magick/image.h>
 
 using namespace rgb_matrix;
+// CONSTANTS
+// Geometry values
+int width = 64;
+int height = 32;
+
+
+int team1_x = 1;
+int team2_x = width - (3 * 5); // 4 characters max, 6 pixels each
+int team_y = 8;
+int clock_letter_width = 4;
+int clock_letter_height = 6;
+int team_letter_width = 5; // 5 pixels per letter in medium font
+int team_letter_height = 8;
+int score_letter_width = 8; // 8 pixels per letter in large font
+int score_letter_height = 13;
+int time_x = 22;
+int time_y = 4;
+int period_x = time_x + 8;
+int period_y = 8 + time_y;
+int score1_x = team1_x - 1;
+int score2_x = team2_x - 1;
+int score_y = height / 2 + 4;
+
 // Helper function to return all relevant details about a game
 GameDetails extractGameDetails(const Json::Value& game, const Json::Value& config) {
     GameDetails details;
@@ -158,32 +181,78 @@ Json::Value readScores() {
     return scores;
 }
 
+// Writes the scores of the two teams on the bottom left and bottom right side of the matrix
+void writeScores(FrameCanvas *offscreen, GameDetails details,
+                rgb_matrix::Font &large_font) {
+    // First team score bottom left
+    if (details.firstScore.length() == 1) {
+        details.firstScore = "0" + details.firstScore;
+    }
+    if (details.secondScore.length() == 1) {
+        details.secondScore = "0" + details.secondScore;
+    }
+    rgb_matrix::DrawText(offscreen, large_font,
+                    score1_x, score_y + large_font.baseline(),
+                    details.firstSecondaryColor, NULL, details.firstScore.c_str(),
+                    0);
+    // Second team score middle left
+    rgb_matrix::DrawText(offscreen, large_font,
+                    score2_x - ((details.secondScore.length() - 2) * score_letter_width), score_y + large_font.baseline(),
+                    details.secondSecondaryColor, NULL, details.secondScore.c_str(),
+                    0); // x value adjusted for right alignment
+}
+
+// Writes the game time and period in the center of the matrix
+void writeTimes(FrameCanvas *offscreen, GameDetails details,
+                rgb_matrix::Font &small_font) {
+    // Game clock top center
+    // Live game
+    if (details.status == "in") {
+        // Appends a leading zero if 00:59.9 < time < 10:00 
+        if (details.displayClock.length() == 4 && details.displayClock.find(":") != std::string::npos) {
+            details.displayClock = "0" + details.displayClock;
+        }
+        // For NBA, when time is 0.0 <= time < 10.0, we need to shift it to the right by one character
+        if (details.displayClock.length() == 3) {
+            rgb_matrix::DrawText(offscreen, small_font,
+                    time_x + clock_letter_width, time_y + small_font.baseline(),
+                    details.white, NULL, details.displayClock.c_str(),
+                    0); 
+        } else {
+            rgb_matrix::DrawText(offscreen, small_font,
+                    time_x, time_y + small_font.baseline(),
+                    details.white, NULL, details.displayClock.c_str(),
+                    0); 
+        }
+        // Period middle center
+        rgb_matrix::DrawText(offscreen, small_font,
+                    period_x, period_y + small_font.baseline(),
+                    details.white, NULL, details.period.c_str(),
+                    0);
+    } else if (details.status == "post") { // Ended game
+        rgb_matrix::DrawText(offscreen, small_font,
+                    time_x, time_y + small_font.baseline(),
+                    details.white, NULL, "FINAL",
+                    0);
+    }
+}
+
+void drawField(FrameCanvas *offscreen, GameDetails details) {
+    // This will be replaced with 
+
+    // White for where the team has already been
+    rgb_matrix::DrawLine(offscreen, 27, height - 1, 36, height - 1, details.white);
+    rgb_matrix::DrawLine(offscreen, 27, height - 1, 36, height - 1, details.white);
+
+
+}
+
 
 
 // Cycle through games in currentScores.json and display them in a traditional scoreboard format
 void writeScoreboard(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                  rgb_matrix::Font &large_font, rgb_matrix::Font &medium_font,
                  rgb_matrix::Font &small_font) {
-    // Geometry values
-    int width = offscreen->width();
-    int height = offscreen->height();
-    int clock_letter_width = 4;
-    int clock_letter_height = 6;
-    int team_letter_width = 5; // 5 pixels per letter in medium font
-    int team_letter_height = 8;
-    int score_letter_width = 8; // 8 pixels per letter in large font
-    int score_letter_height = 13;
-
-    int time_x = 22;
-    int time_y = 4;
-    int period_x = time_x + 8;
-    int period_y = 8 + time_y;
-    int team1_x = 1;
-    int team2_x = offscreen->width() - (3 * 5); // 4 characters max, 6 pixels each
-    int team_y = 0;
-    int score1_x = team1_x - 1;
-    int score2_x = team2_x - 1;
-    int score_y = 12;
     
 
     // Main loop to keep the program running
@@ -201,69 +270,25 @@ void writeScoreboard(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
             // Extract game details
             GameDetails details = extractGameDetails(game, config);
 
-
-
             // Display game details
 
-            // First team name top left
+            // Write times in center
+            writeTimes(offscreen, details, small_font);
+
+            // Write scores on bottom left and bottom right
+            writeScores(offscreen, details, large_font);
+
+            // First team name top left-ish
             rgb_matrix::DrawText(offscreen, medium_font,
-                           team1_x, 0 + medium_font.baseline(),
+                           team1_x, team_y + medium_font.baseline(),
                            details.firstPrimaryColor, NULL, details.firstTeam.c_str(),
                            0); // The 0s are x, y, and then letter_spacing
 
-            
-            // First team score middle left
-            rgb_matrix::DrawText(offscreen, large_font,
-                           score1_x, score_y + large_font.baseline(),
-                           details.firstSecondaryColor, NULL, details.firstScore.c_str(),
-                           0);
-
-            // Second team name top right
+            // Second team name top right-ish
             rgb_matrix::DrawText(offscreen, medium_font,
                            team2_x + (std::abs(static_cast<int>(details.secondTeam.length() - 3)) * team_letter_width), team_y + medium_font.baseline(),
                            details.secondPrimaryColor, NULL, details.secondTeam.c_str(),
                            0);  // x value adjusted for right alignment when only 2 letter team names
-            // Second team score middle left
-            rgb_matrix::DrawText(offscreen, large_font,
-                           score2_x - ((details.secondScore.length() - 2) * score_letter_width), score_y + large_font.baseline(),
-                           details.secondSecondaryColor, NULL, details.secondScore.c_str(),
-                           0); // x value adjusted for right alignment
-                           
-            // Game clock top center
-            // Live game
-            if (details.status == "in") {
-                // Appends a leading zero if 00:59.9 < time < 10:00 
-                if (details.displayClock.length() == 4 && details.displayClock.find(":") != std::string::npos) {
-                    details.displayClock = "0" + details.displayClock;
-                }
-                // For NBA, when time is 0.0 <= time < 10.0, we need to shift it to the right by one character
-                if (details.displayClock.length() == 3) {
-                    rgb_matrix::DrawText(offscreen, small_font,
-                            time_x + clock_letter_width, time_y + small_font.baseline(),
-                            details.white, NULL, details.displayClock.c_str(),
-                            0); 
-                } else {
-                    rgb_matrix::DrawText(offscreen, small_font,
-                            time_x, time_y + small_font.baseline(),
-                            details.white, NULL, details.displayClock.c_str(),
-                            0); 
-                }
-                // Period middle center
-                rgb_matrix::DrawText(offscreen, small_font,
-                            period_x, period_y + small_font.baseline(),
-                            details.white, NULL, details.period.c_str(),
-                            0);
-            } else if (details.status == "post") { // Ended game
-                rgb_matrix::DrawText(offscreen, small_font,
-                           time_x, time_y + small_font.baseline(),
-                           details.white, NULL, "FINAL",
-                           0);
-            }
-            
-            
-            
-
-            
             
             // Double buffer swap
             offscreen = matrix->SwapOnVSync(offscreen);
@@ -293,15 +318,15 @@ void writeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
 
             // Extract game details
             GameDetails details = extractGameDetails(game, config);
+            
+            // Draw times in center
+            writeTimes(offscreen, details, small_font);
 
-            rgb_matrix::DrawText(offscreen, large_font,
-                           0, height / 2 + large_font.baseline(),
-                           details.white, NULL, details.firstScore.c_str(),
-                           0);
-            rgb_matrix::DrawText(offscreen, large_font,
-                           width - (details.secondScore.length() * 8), height / 2 + large_font.baseline(),
-                           details.white, NULL, details.secondScore.c_str(),
-                           0);
+            // Write scores on bottom left and bottom right
+            writeScores(offscreen, details, large_font);
+
+            // Draw the field
+            // drawField(offscreen, details);
 
             // Retrieve logo file names
             std::string firstTemp = details.firstTeam;
@@ -323,11 +348,11 @@ void writeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
             ImageVector secondImage = LoadImageAndScaleImage(secondLogo.c_str(),
                                               height / 2,
                                               height / 2);
-            if (firstImage.size() > 0) {
+            if (firstImage.size() > 0 && secondImage.size() > 0) {
                 CopyImageToCanvas(firstImage[0], offscreen, 1, 1);
                 CopyImageToCanvas(secondImage[0], offscreen, width - (height / 2) - 1, 1);
                 offscreen = matrix->SwapOnVSync(offscreen);
-                usleep(2 * 1000000); // Display for 5 seconds 5000000
+                usleep(8 * 1000000); // Display for 5 seconds 5000000
             }
         }
 
@@ -338,6 +363,7 @@ void writeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
 
 
 int main(int argc, char *argv[]) {
+    std::string mode = "logos";
     // Arg parsing.
     RGBMatrix::Options matrix_options;
     rgb_matrix::RuntimeOptions runtime_opt;
@@ -347,12 +373,16 @@ int main(int argc, char *argv[]) {
     }
 
     // Set up defaults
-    const char *large_bdf_font_file = "../matrix/fonts/8x13.bdf";
+    const char *large_bdf_font_file = "../matrix/fonts/8x13B.bdf";
     const char *medium_bdf_font_file = "../matrix/fonts/5x8.bdf";
     const char *small_bdf_font_file = "../matrix/fonts/4x6.bdf";
     int opt;
-    while ((opt = getopt(argc, argv, "")) != -1) {// Within this empty string, add any command line options you want to support. i.e. "a:b:cd" options a and b require an associated value, c and do do not
+    while ((opt = getopt(argc, argv, "d:")) != -1) {// Within this empty string, add any command line options you want to support. i.e. "a:b:cd" options a and b require an associated value, c and do do not
         switch (opt) {
+        case 'd':
+            mode = optarg;
+            break;
+            
         default: /* '?' */
             return usage(argv[0]);
         }
@@ -393,9 +423,15 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, InterruptHandler);
 
     // writeScoreboard(matrix, offscreen, config, large_font, medium_font, small_font);
-    Magick::InitializeMagick(*argv);
-    writeLogos(matrix, offscreen, config, large_font, medium_font, small_font);
-
+    if (mode == "scoreboard") {
+        writeScoreboard(matrix, offscreen, config, large_font, medium_font, small_font);
+    } else if (mode == "logos") {
+        Magick::InitializeMagick(*argv);
+        writeLogos(matrix, offscreen, config, large_font, medium_font, small_font);
+    } else {
+        std::cerr << "Invalid mode selected. Use 'scoreboard' or 'logos'." << std::endl;
+        return 1;
+    }
     
     delete matrix;
 
