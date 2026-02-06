@@ -35,7 +35,7 @@
     },
     {
       "shortName": "LAR @ ARI",
-      "status": "final",
+      "status": "post",
       "period": 4,
       "displayClock": "0:00",
       "date": "2026-01-04T21:25Z",
@@ -57,7 +57,7 @@
     },
     {
       "shortName": "NYG @ WAS",
-      "status": "final",
+      "status": "post",
       "period": 4,
       "displayClock": "0:00",
       "date": "2026-01-04T17:00Z",
@@ -90,7 +90,7 @@
     },
     {
       "shortName": "BUF @ MIA",
-      "status": "final",
+      "status": "post",
       "period": 4,
       "displayClock": "0:00",
       "date": "2026-01-04T13:00Z",
@@ -123,7 +123,7 @@
     },
     {
       "shortName": "CLE @ CIN",
-      "status": "final",
+      "status": "post",
       "period": 4,
       "displayClock": "0:00",
       "date": "2026-01-04T13:00Z",
@@ -156,7 +156,7 @@
     },
     {
       "shortName": "KC @ DEN",
-      "status": "final",
+      "status": "post",
       "period": 4,
       "displayClock": "0:00",
       "date": "2026-01-04T16:25Z",

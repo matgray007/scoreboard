@@ -6,4 +6,4 @@ sudo ./pixel-mover --led-rows=32 --led-cols=64 --led-limit-refresh=60 --led-slow
 
 
 
-sudo ./sendScores.exe --led-rows=32 --led-cols=64 --led-limit-refresh=60 --led-slowdown-gpio=2 --led-gpio-mapping=adafruit-hat
+sudo ./sendScores.exe --led-rows=32 --led-cols=64 --led-limit-refresh=60 --led-slowdown-gpio=2 --led-gpio-mapping=adafruit-hat -d logos

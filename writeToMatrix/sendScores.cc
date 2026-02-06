@@ -107,17 +107,16 @@ static ImageVector LoadImageAndScaleImage(const char *filename,
 }
 
 
-// Copied from led-image-viewer.cc (not present in header files)
+// Copied from led-image-viewer.cc (not present in header files) and then altered
 // Copy an image to a Canvas. Note, the RGBMatrix is implementing the Canvas
 // interface as well as the FrameCanvas we use in the double-buffering of the
 // animted image.
 void CopyImageToCanvas(const Magick::Image &image, Canvas *canvas, int offset_x = 0, int offset_y = 0) {
-//   const int offset_x = 0, offset_y = 0;  // If you want to move the image.
   // Copy all the pixels to the canvas.
   for (size_t y = 0; y < image.rows(); ++y) {
     for (size_t x = 0; x < image.columns(); ++x) {
       const Magick::Color &c = image.pixelColor(x, y);
-      if (c.alphaQuantum() < 65535  * 0.5) { // Changes from 256
+      if (c.alphaQuantum() < 65535  * 0.5) { // Changed from 256
         canvas->SetPixel(x + offset_x, y + offset_y,
                          ScaleQuantumToChar(c.redQuantum()),
                          ScaleQuantumToChar(c.greenQuantum()),
@@ -125,6 +124,23 @@ void CopyImageToCanvas(const Magick::Image &image, Canvas *canvas, int offset_x 
       }
     }
   }
+}
+
+void CopyHalfImage(const Magick::Image &image, Canvas *canvas, int offset_x = 0, int offset_y = 0, bool left_half = true) {
+    // Copy the left or right half of the image to the canvas.
+    size_t start_x = left_half ? 0 :  2 * image.columns() / 5 + 1;
+    size_t end_x = left_half ? 3 * image.columns() / 5 : image.columns();
+    for (size_t y = 0; y < image.rows(); ++y) {
+        for (size_t x = start_x; x < end_x; ++x) {
+            const Magick::Color &c = image.pixelColor(x, y);
+            if (c.alphaQuantum() < 65535  * 0.5) { // Changed from 256
+            canvas->SetPixel(x + offset_x - start_x, y + offset_y,
+                                ScaleQuantumToChar(c.redQuantum()),
+                                ScaleQuantumToChar(c.greenQuantum()),
+                                ScaleQuantumToChar(c.blueQuantum()));
+            }
+        }
+    }
 }
 
 // Global flag for interrupt handling
@@ -170,7 +186,7 @@ Json::Value readConfig() {
 }
 
 // Read in the current scores JSON file and return the corresponding object
-Json::Value readScores() {
+Json::Value readScores(bool favorite_only = false) {
     std::string scores_path = "../currentScores.json";
     std::ifstream file(scores_path, std::ifstream::binary);
     Json::Value scores;
@@ -179,6 +195,16 @@ Json::Value readScores() {
     Json::parseFromStream(builder, file, &scores, &errs);
     file.close();
     return scores;
+}
+
+// Given a team name and overall config, retrieve the path to the corresponding logo file
+std::string retrieveLogoPath(std::string teamName, Json::Value overallConfig) {
+    std::string temp = teamName;
+    std::transform(temp.begin(), temp.end(), temp.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    std::string logoPath =
+        "../logos/" + overallConfig["league"].asString() + "/" + temp + ".png";
+    return logoPath;
 }
 
 // Writes the scores of the two teams on the bottom left and bottom right side of the matrix
@@ -201,6 +227,37 @@ void writeScores(FrameCanvas *offscreen, GameDetails details,
                     details.secondSecondaryColor, NULL, details.secondScore.c_str(),
                     0); // x value adjusted for right alignment
 }
+
+// Writes the scores of the two teams on the bottom middle of the matrix
+void writeSmallScores(FrameCanvas *offscreen, GameDetails details,
+                rgb_matrix::Font &font) {
+    // First team score bottom left
+    if (details.firstScore.length() == 1) {
+        details.firstScore = "0" + details.firstScore;
+    }
+    if (details.secondScore.length() == 1) {
+        details.secondScore = "0" + details.secondScore;
+    }
+    // First team score
+    rgb_matrix::DrawText(offscreen, font,
+                    width / 2 - details.firstScore.length() * team_letter_width - 2, height - team_letter_height - 1 + font.baseline(),
+                    details.firstSecondaryColor, NULL, details.firstScore.c_str(),
+                    0);
+    // Second team score
+    rgb_matrix::DrawText(offscreen, font,
+                    width / 2 + 2, height - team_letter_height - 1 + font.baseline(),
+                    details.secondSecondaryColor, NULL, details.secondScore.c_str(),
+                    0); // x value adjusted for right alignment
+    offscreen->SetPixel(width / 2 - 2, height - team_letter_height - (team_letter_height / 2) - 1 + font.baseline(), 
+            details.white.r, details.white.g, details.white.b);
+    offscreen->SetPixel(width / 2 - 1, height - team_letter_height - (team_letter_height / 2) - 1 + font.baseline(), 
+                           details.white.r, details.white.g, details.white.b);
+    offscreen->SetPixel(width / 2, height - team_letter_height - (team_letter_height / 2) - 1 + font.baseline(), 
+                           details.white.r, details.white.g, details.white.b);
+    
+    
+}
+
 
 // Writes the game time and period in the center of the matrix
 void writeTimes(FrameCanvas *offscreen, GameDetails details,
@@ -252,7 +309,7 @@ void drawField(FrameCanvas *offscreen, GameDetails details) {
 // Cycle through games in currentScores.json and display them in a traditional scoreboard format
 void writeScoreboard(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                  rgb_matrix::Font &large_font, rgb_matrix::Font &medium_font,
-                 rgb_matrix::Font &small_font) {
+                 rgb_matrix::Font &small_font, bool favorite_only) {
     
 
     // Main loop to keep the program running
@@ -299,9 +356,10 @@ void writeScoreboard(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
     }
 }
 
+// Cycle through games in currentScores.json and display them with team logos
 void writeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                  rgb_matrix::Font &large_font, rgb_matrix::Font &medium_font,
-                 rgb_matrix::Font &small_font) {
+                 rgb_matrix::Font &small_font, bool favorite_only) {
     // Geometry values
     int width = offscreen->width();
     int height = offscreen->height();
@@ -329,17 +387,8 @@ void writeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
             // drawField(offscreen, details);
 
             // Retrieve logo file names
-            std::string firstTemp = details.firstTeam;
-            std::transform(firstTemp.begin(), firstTemp.end(), firstTemp.begin(),
-                        [](unsigned char c) { return std::tolower(c); });
-            std::string firstLogo =
-                "../logos/" + overallConfig["league"].asString() + "/" + firstTemp + ".png";
-
-            std::string secondTemp = details.secondTeam;
-            std::transform(secondTemp.begin(), secondTemp.end(), secondTemp.begin(),
-                        [](unsigned char c) { return std::tolower(c); });
-            std::string secondLogo =
-                "../logos/" + overallConfig["league"].asString() + "/" + secondTemp + ".png";
+            std::string firstLogo = retrieveLogoPath(details.firstTeam, overallConfig);
+            std::string secondLogo = retrieveLogoPath(details.secondTeam, overallConfig);
 
             // Display logos
             ImageVector firstImage = LoadImageAndScaleImage(firstLogo.c_str(),
@@ -355,9 +404,70 @@ void writeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                 usleep(8 * 1000000); // Display for 5 seconds 5000000
             }
         }
+    }
+}
+
+
+// Cycle through games in currentScores.json and display them with the logos large
+void writeLargeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
+                 rgb_matrix::Font &large_font, rgb_matrix::Font &medium_font,
+                 rgb_matrix::Font &small_font, bool favorite_only) {
+    // Geometry values
+    int width = offscreen->width();
+    int height = offscreen->height();
+    Json::Value overallConfig = readConfig();
+    while (!interrupt_received) {
+        // Read in currentScores.json
+        Json::Value current_scores = readScores();
+        // Loop through each game in current_scores
+        for (const auto& game : current_scores["games"]) {
+            if (interrupt_received) {
+                break;
+            }
+            // Extract game details
+            GameDetails details = extractGameDetails(game, config);
+            if (favorite_only) {
+                if (details.firstTeam != overallConfig["favoriteTeam"].asString() &&
+                    details.secondTeam != overallConfig["favoriteTeam"].asString()) {
+                    continue;
+                }
+            }
+
+            offscreen->Fill(0, 0, 0);
+            
+            // Draw times in center
+            writeTimes(offscreen, details, small_font);
+
+            // Write scores on bottom left and bottom right
+            writeSmallScores(offscreen, details, medium_font);
+
+            // Draw the field
+            // drawField(offscreen, details);
+
+            // Retrieve logo file names
+            std::string firstLogo = retrieveLogoPath(details.firstTeam, overallConfig);
+            std::string secondLogo = retrieveLogoPath(details.secondTeam, overallConfig);
+
+
+            // Display logos
+            ImageVector firstImage = LoadImageAndScaleImage(firstLogo.c_str(),
+                                              height,
+                                              height);
+            ImageVector secondImage = LoadImageAndScaleImage(secondLogo.c_str(),
+                                              height,
+                                              height);
+            if (firstImage.size() > 0 && secondImage.size() > 0) {
+                CopyHalfImage(firstImage[0], offscreen, 0, 0, false);
+                CopyHalfImage(secondImage[0], offscreen, width - (3 * height / 5), 0, true);
+                offscreen = matrix->SwapOnVSync(offscreen);
+                usleep(8 * 1000000); // Display for 5 seconds 5000000
+            }
+
+
 
             
 
+        }
     }
 }
 
@@ -377,12 +487,15 @@ int main(int argc, char *argv[]) {
     const char *medium_bdf_font_file = "../matrix/fonts/5x8.bdf";
     const char *small_bdf_font_file = "../matrix/fonts/4x6.bdf";
     int opt;
-    while ((opt = getopt(argc, argv, "d:")) != -1) {// Within this empty string, add any command line options you want to support. i.e. "a:b:cd" options a and b require an associated value, c and do do not
+    bool favorite_only = false;
+    while ((opt = getopt(argc, argv, "d:o")) != -1) {// Within this empty string, add any command line options you want to support. i.e. "a:b:cd" options a and b require an associated value, c and do do not
         switch (opt) {
         case 'd':
             mode = optarg;
             break;
-            
+        case 'o':
+            favorite_only = true;
+            break;
         default: /* '?' */
             return usage(argv[0]);
         }
@@ -424,10 +537,13 @@ int main(int argc, char *argv[]) {
 
     // writeScoreboard(matrix, offscreen, config, large_font, medium_font, small_font);
     if (mode == "scoreboard") {
-        writeScoreboard(matrix, offscreen, config, large_font, medium_font, small_font);
+        writeScoreboard(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
     } else if (mode == "logos") {
         Magick::InitializeMagick(*argv);
-        writeLogos(matrix, offscreen, config, large_font, medium_font, small_font);
+        writeLogos(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
+    } else if (mode == "large-logos") {
+        Magick::InitializeMagick(*argv);
+        writeLargeLogos(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
     } else {
         std::cerr << "Invalid mode selected. Use 'scoreboard' or 'logos'." << std::endl;
         return 1;
