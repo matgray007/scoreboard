@@ -49,8 +49,8 @@ GameDetails extractGameDetails(const Json::Value& game, const Json::Value& confi
     std::string secondTeamLong = game["competitors"][secondTeamInd]["displayName"].asString();
     details.firstTeam = config[firstTeamLong]["shortName"].asString();
     details.secondTeam = config[secondTeamLong]["shortName"].asString();
-    details.firstScore = game["competitors"][0]["score"].asString();
-    details.secondScore = game["competitors"][1]["score"].asString();
+    details.firstScore = game["competitors"][firstTeamInd]["score"].asString();
+    details.secondScore = game["competitors"][secondTeamInd]["score"].asString();
 
     details.firstPrimaryColor = Color(config[firstTeamLong]["colors"]["primary"][0].asInt(),
                                       config[firstTeamLong]["colors"]["primary"][1].asInt(),
@@ -427,8 +427,8 @@ void writeLargeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
             // Extract game details
             GameDetails details = extractGameDetails(game, config);
             if (favorite_only) {
-                if (details.firstTeam != overallConfig["favoriteTeam"].asString() &&
-                    details.secondTeam != overallConfig["favoriteTeam"].asString()) {
+                if (details.firstTeam != overallConfig["favoriteTeam"][overallConfig["league"].asString()].asString() &&
+                    details.secondTeam != overallConfig["favoriteTeam"][overallConfig["league"].asString()].asString()) {
                     continue;
                 }
             }

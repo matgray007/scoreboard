@@ -1,5 +1,8 @@
 {
     "liveOnly": true,
-    "league": "nba",
-    "favoriteTeam": "ATL"
+    "favoriteTeam": {
+        "nba": "ATL",
+        "nfl": "CHI"
+    },
+    "league": "nba"
 }

@@ -30,9 +30,33 @@ def getScores(liveOnly, sport):
         json['games'] = list(filter(lambda x: x['status'] == 'in', games))
     else: # Games that are in progress or have ended
         json['games'] = list(filter(lambda x: x['status'] == 'in' or x['status'] == 'post', games))
-    return json
+    with open('currentScores.json', 'w') as file:
+        file.write(dumps(json))
+    return
 
 # TODO: Retain who has the ball, down and distance, and timeouts remaining
+
+def getNews(sport):
+    if (sport == 'nba'):
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news')
+    elif (sport == 'nfl'):
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news')
+    else:
+        response = {}
+    json = {'news': []}
+    news = []
+    for article in response.json()['articles']:
+        team = []
+        temp = (category for category in article['categories'] if category['type'] == 'team')
+        for team_temp in temp:
+            team.append(team_temp['description'])
+        news.append({'headline': article['headline'], 'description': article['description'], 'team': team})
+    # There can be multiple teams, so just the first team is taken for simplicity. This can be changed to a list of teams if needed
+    # The teams can include college teams, which are not includes in the team_config, so they will need to be filtered on the c++ side
+    json['news'] = news
+    with open('currentNews.json', 'w') as file:
+        file.write(dumps(json))
+    return news
 
 
 
@@ -40,8 +64,7 @@ config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
 with open(config_file_path, 'r') as config_file:
     config = json.load(config_file)
 while True:
-    currScores = getScores(config["liveOnly"], config["league"])
-    with open('currentScores.json', 'w') as file:
-        file.write(dumps(currScores))
+    getScores(config["liveOnly"], config["league"])
+    # getNews(config["league"])
 
     time.sleep(20)
