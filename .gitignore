@@ -2,3 +2,4 @@ currentScores.json
 writeToMatrix/sendScores.exe
 writeToMatrix/sendScores.o
 .venv
+secrets.json

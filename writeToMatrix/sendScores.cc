@@ -471,6 +471,27 @@ void writeLargeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
     }
 }
 
+// Spotify mode
+void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
+                 rgb_matrix::Font &large_font, rgb_matrix::Font &medium_font,
+                 rgb_matrix::Font &small_font) {
+    while (!interrupt_received) {
+        offscreen->Fill(0, 0, 0);
+        Json::Value current_scores = readScores();
+        std::string song = current_scores["currently_playing"]["song"].asString();
+        std::string artist = current_scores["currently_playing"]["artist"].asString();
+        std::string album_art = current_scores["currently_playing"]["album_art"].asString();
+        Magick::Image image(url);
+        image.scale(Magick::Geometry(height, height));
+        CopyImageToCanvas(image, offscreen);
+        // rgb_matrix::DrawText(offscreen, medium_font,
+        //                    height, 1 + medium_font.baseline(),
+        //                    details.white, NULL, song.c_str(),
+        //                    0);
+    }
+        
+}
+
 
 int main(int argc, char *argv[]) {
     std::string mode = "logos";
