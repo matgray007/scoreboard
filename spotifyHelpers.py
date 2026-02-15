@@ -63,25 +63,14 @@ def getSong(access_token):
 
 
     
+def refreshToken():
+    token_file = 'spotify_token.json'
+    secrets_file_path = os.path.join(os.path.dirname(__file__), 'secrets.json')
+    with open(secrets_file_path, 'r') as secrets_file:
+        secrets = json.load(secrets_file)
 
-
-
-
-config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
-with open(config_file_path, 'r') as config_file:
-    config = json.load(config_file)
-secrets_file_path = os.path.join(os.path.dirname(__file__), 'secrets.json')
-with open(secrets_file_path, 'r') as secrets_file:
-    secrets = json.load(secrets_file)
-
-client_id = secrets["spotify"]["client_id"]
-client_secret = secrets["spotify"]["client_secret"]
-redirect_uri = "https://127.0.0.1:8000/callback"  # Must match Spotify Dashboard setting
-scope = "user-read-playback-state user-read-currently-playing"
-
-token_file = 'spotify_token.json'
-
-if os.path.exists(token_file):
+    client_id = secrets["spotify"]["client_id"]
+    client_secret = secrets["spotify"]["client_secret"]
     with open(token_file, 'r') as f:
         token_data = json.load(f)
     
@@ -95,43 +84,38 @@ if os.path.exists(token_file):
     
     with open(token_file, 'w') as f:
         json.dump(new_token_data, f)
-else:
-    # First time setup - need user authorization
-    auth_url = get_user_auth_url(client_id, redirect_uri, scope)
-    print(f"\nPlease visit this URL to authorize the application:\n{auth_url}\n")
-    
-    # Copy the authorization code from the redirect URL after granting permissions
-    auth_code = input("Enter the authorization code from the URL: ")
-    
-    token_data = get_access_token_from_code(client_id, client_secret, auth_code, redirect_uri)
-    access_token = token_data['access_token']
-    
-    # Save tokens for future use
-    with open(token_file, 'w') as f:
-        json.dump(token_data, f)
+    return access_token
 
+def authSetup():
+    access_token = None
+    config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    with open(config_file_path, 'r') as config_file:
+        config = json.load(config_file)
+    secrets_file_path = os.path.join(os.path.dirname(__file__), 'secrets.json')
+    with open(secrets_file_path, 'r') as secrets_file:
+        secrets = json.load(secrets_file)
 
-# Main loop to continuously fetch current song and update JSON file
-while True:
-    currSong = getSong(access_token)
-    if currSong is None:
-        # Token expired, refresh it
-        with open(token_file, 'r') as f:
-            token_data = json.load(f)
+    client_id = secrets["spotify"]["client_id"]
+    client_secret = secrets["spotify"]["client_secret"]
+    redirect_uri = "https://127.0.0.1:8000/callback"  # Must match Spotify Dashboard setting
+    scope = "user-read-playback-state user-read-currently-playing"
+
+    token_file = 'spotify_token.json'
+
+    if os.path.exists(token_file):
+        access_token = refreshToken()
+    else:
+        # First time setup - need user authorization
+        auth_url = get_user_auth_url(client_id, redirect_uri, scope)
+        print(f"\nPlease visit this URL to authorize the application:\n{auth_url}\n")
         
-        new_token_data = refresh_access_token(client_id, client_secret, token_data['refresh_token'])
-        access_token = new_token_data['access_token']
+        # Copy the authorization code from the redirect URL after granting permissions
+        auth_code = input("Enter the authorization code from the URL: ")
         
-        if 'refresh_token' not in new_token_data:
-            new_token_data['refresh_token'] = token_data['refresh_token']
+        token_data = get_access_token_from_code(client_id, client_secret, auth_code, redirect_uri)
+        access_token = token_data['access_token']
         
+        # Save tokens for future use
         with open(token_file, 'w') as f:
-            json.dump(new_token_data, f)
-        
-        currSong = getSong(access_token)
-
-    if currSong:
-        with open('currentScores.json', 'w') as file:
-            file.write(dumps(currSong))
-
-    time.sleep(5)
+            json.dump(token_data, f)
+    return access_token

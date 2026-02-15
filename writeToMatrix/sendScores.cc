@@ -515,8 +515,7 @@ void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                  rgb_matrix::Font &small_font) {
     int scrolling_speed = 3; // Adjust this value to increase/decrease scrolling speed (letters per second)
     int delay_speed_usec = 1000000 / scrolling_speed / medium_font.CharacterWidth('W');
-    std::string spotify_logo_path = "../img/spotify_logo.png";
-    ImageVector spotify_logo = LoadImageAndScale(spotify_logo_path.c_str(), height / 2, height / 2);
+
     while (!interrupt_received) {
         offscreen->Fill(0, 0, 0);
         Json::Value current_scores = readScores();
@@ -527,22 +526,25 @@ void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
             Magick::Image image = load_image_from_url(album_art);
             image.scale(Magick::Geometry(height, height));
             int x = width;
-            int length = 0;
+            int song_length = 0;
+            int artist_length = 0;
             
 
-            while (!interrupt_received && --x + length >= (width / 2)) {
+            while (!interrupt_received && (--x + song_length >= (width / 2) || x + artist_length >= (width / 2))) {
                 offscreen->Fill(0, 0, 0);
-                length = rgb_matrix::DrawText(offscreen, medium_font,
+                song_length = rgb_matrix::DrawText(offscreen, medium_font,
                            x, 1 + medium_font.baseline(),
                            Color(255, 255, 255), NULL, song.c_str(),
                            0);
+                artist_length = rgb_matrix::DrawText(offscreen, medium_font,
+                           x, height / 2 + 1 + medium_font.baseline(),
+                           Color(255, 255, 255), NULL, artist.c_str(),
+                           0);
                 CopyImageToCanvas(image, offscreen);
-                CopyImageToCanvas(spotify_logo[0], offscreen, height, height / 2);
                 offscreen = matrix->SwapOnVSync(offscreen);
                 usleep(delay_speed_usec);
             }
         }
-        // usleep(5 * 1000000); // Display for 10 seconds 5000000
     }
         
 }

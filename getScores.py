@@ -3,6 +3,9 @@ import time
 from json import dumps
 import json
 import os
+import spotifyHelpers
+
+
 '''
 Gets the scores of the respective league and parses the json to extract relevant information
 Inputs: 
@@ -35,13 +38,53 @@ def getScores(liveOnly, sport):
 # TODO: Retain who has the ball, down and distance, and timeouts remaining
 
 
+'''
+Gets the song currently playing on a user's Spotify account *requires setup of Spotify developer*
+Inputs: 
+    liveOnly: boolean indicating whether to get only live games or all games
+    sport: string indicating which sport to get scores for (nfl or nba)
+'''
+def getSong(access_token):
+    currSong = spotifyHelpers.getSong(access_token)
+    if currSong["currently_playing"] is None:
+        spotifyHelpers.refreshToken()
+        currSong = spotifyHelpers.getSong(access_token)
+    return currSong
 
-config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
-with open(config_file_path, 'r') as config_file:
-    config = json.load(config_file)
-while True:
-    currScores = getScores(config["liveOnly"], config["league"])
-    with open('currentScores.json', 'w') as file:
-        file.write(dumps(currScores))
 
-    time.sleep(20)
+
+def main():
+    mode_file_path = os.path.join(os.path.dirname(__file__), 'mode.json')
+    with open(mode_file_path, 'r') as mode_file:
+        mode_config = json.load(mode_file)
+    config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    with open(config_file_path, 'r') as config_file:
+        config = json.load(config_file)
+
+    mode = mode_config["mode"]
+    # Setup
+    sleep_time = 20
+
+    if mode == "spotify":
+        access_token = spotifyHelpers.authSetup()
+        sleep_time = 5 # Refresh more often for spotify since the display cycles more quickly than scores
+
+
+
+    # Main loop
+    while True:
+        curr = {}
+        if mode == "spotify":
+            curr = getSong(access_token)
+            
+        elif mode == "scores":
+            curr = getScores(config["liveOnly"], config["league"])
+            with open('currentScores.json', 'w') as file:
+                file.write(dumps(curr))
+        with open('currentScores.json', 'w') as file:
+                file.write(dumps(curr))
+
+        time.sleep(sleep_time)
+
+if __name__ == "__main__":
+    main()
