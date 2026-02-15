@@ -515,6 +515,8 @@ void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                  rgb_matrix::Font &small_font) {
     int scrolling_speed = 3; // Adjust this value to increase/decrease scrolling speed (letters per second)
     int delay_speed_usec = 1000000 / scrolling_speed / medium_font.CharacterWidth('W');
+    std::string spotify_logo_path = "../img/spotify_logo.png";
+    ImageVector spotify_logo = LoadImageAndScale(spotify_logo_path.c_str(), height / 2, height / 2);
     while (!interrupt_received) {
         offscreen->Fill(0, 0, 0);
         Json::Value current_scores = readScores();
@@ -526,6 +528,7 @@ void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
             image.scale(Magick::Geometry(height, height));
             int x = width;
             int length = 0;
+            
 
             while (!interrupt_received && --x + length >= (width / 2)) {
                 offscreen->Fill(0, 0, 0);
@@ -534,6 +537,7 @@ void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                            Color(255, 255, 255), NULL, song.c_str(),
                            0);
                 CopyImageToCanvas(image, offscreen);
+                CopyImageToCanvas(spotify_logo[0], offscreen, height, height / 2);
                 offscreen = matrix->SwapOnVSync(offscreen);
                 usleep(delay_speed_usec);
             }
