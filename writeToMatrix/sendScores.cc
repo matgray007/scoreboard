@@ -187,6 +187,12 @@ static void InterruptHandler(int signo) {
   interrupt_received = true;
 }
 
+// Global flag for SIGHUP handling. It will be used to reload the config without restarting the program
+volatile bool sighup_received = false;
+static void SighupHandler(int signo) {
+    sighup_received = true;
+}
+
 // Usage function for displaying flags and syntax
 static int usage(const char *progname) {
   fprintf(stderr, "usage: %s [options]\n", progname);
@@ -551,7 +557,7 @@ void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
 
 
 int main(int argc, char *argv[]) {
-    std::string mode = "logos";
+    // TODO: Set the defaults for rows, cols, led limit refresh, led slowdown gpio, and gpio mapping. 
     // Arg parsing.
     RGBMatrix::Options matrix_options;
     rgb_matrix::RuntimeOptions runtime_opt;
@@ -561,6 +567,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Set up defaults
+    std::string mode = "logos"; // TODO: Read in the mode from mode.json here. If the mode is provided as a flag, then override the mode.json file
     const char *large_bdf_font_file = "../matrix/fonts/8x13B.bdf";
     const char *medium_bdf_font_file = "../matrix/fonts/5x8.bdf";
     const char *small_bdf_font_file = "../matrix/fonts/4x6.bdf";
@@ -569,7 +576,7 @@ int main(int argc, char *argv[]) {
     while ((opt = getopt(argc, argv, "d:o")) != -1) {// Within this empty string, add any command line options you want to support. i.e. "a:b:cd" options a and b require an associated value, c and do do not
         switch (opt) {
         case 'd':
-            mode = optarg;
+            mode = optarg; // Leave this in as an option, but it will mostly be used for testing different modes. The default should be pulling the mode from "mode.json"
             break;
         case 'o':
             favorite_only = true;
@@ -612,23 +619,30 @@ int main(int argc, char *argv[]) {
     // Signal handling for graceful exit
     signal(SIGTERM, InterruptHandler);
     signal(SIGINT, InterruptHandler);
+    signal(SIGHUP, SighupHandler);
+    while (!interrupt_received) {
+        if (sighup_received) {
+            // TODO: reload both the config and the mode.json
+        }
+        if (mode == "scoreboard") {
+            writeScoreboard(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
+        } else if (mode == "logos") {
+            Magick::InitializeMagick(*argv);
+            writeLogos(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
+        } else if (mode == "large-logos") {
+            Magick::InitializeMagick(*argv);
+            writeLargeLogos(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
+        } else if (mode == "spotify") {
+            Magick::InitializeMagick(*argv);
+            writeSpotify(matrix, offscreen, config, large_font, medium_font, small_font);
+        } else {
+            std::cerr << "Invalid mode selected. Use 'scoreboard' or 'logos'." << std::endl;
+            return 1;
+        }
+        
 
-    // writeScoreboard(matrix, offscreen, config, large_font, medium_font, small_font);
-    if (mode == "scoreboard") {
-        writeScoreboard(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
-    } else if (mode == "logos") {
-        Magick::InitializeMagick(*argv);
-        writeLogos(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
-    } else if (mode == "large-logos") {
-        Magick::InitializeMagick(*argv);
-        writeLargeLogos(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
-    } else if (mode == "spotify") {
-        Magick::InitializeMagick(*argv);
-        writeSpotify(matrix, offscreen, config, large_font, medium_font, small_font);
-    } else {
-        std::cerr << "Invalid mode selected. Use 'scoreboard' or 'logos'." << std::endl;
-        return 1;
     }
+
     
     delete matrix;
 

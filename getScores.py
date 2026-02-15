@@ -13,6 +13,7 @@ Inputs:
     sport: string indicating which sport to get scores for (nfl or nba)
 '''
 def getScores(liveOnly, sport):
+    print("getting scores...")
     if (sport == 'nba'):
         response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard')
     elif (sport == 'nfl'):
@@ -33,9 +34,7 @@ def getScores(liveOnly, sport):
         json['games'] = list(filter(lambda x: x['status'] == 'in', games))
     else: # Games that are in progress or have ended
         json['games'] = list(filter(lambda x: x['status'] == 'in' or x['status'] == 'post', games))
-    with open('currentScores.json', 'w') as file:
-        file.write(dumps(json))
-    return
+    return json
 
 # TODO: Retain who has the ball, down and distance, and timeouts remaining
 
@@ -57,8 +56,6 @@ def getNews(sport):
     # There can be multiple teams, so just the first team is taken for simplicity. This can be changed to a list of teams if needed
     # The teams can include college teams, which are not includes in the team_config, so they will need to be filtered on the c++ side
     json['news'] = news
-    with open('currentNews.json', 'w') as file:
-        file.write(dumps(json))
     return news
 
 
