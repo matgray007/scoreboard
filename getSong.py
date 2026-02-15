@@ -134,4 +134,4 @@ while True:
         with open('currentScores.json', 'w') as file:
             file.write(dumps(currSong))
 
-    time.sleep(20)
+    time.sleep(5)

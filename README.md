@@ -3,6 +3,7 @@ Collect scores of sports games from ESPN api and display them on an RGB LED moni
 
 # Dependencies
 `sudo apt-get install libjsoncpp-dev`
+`sudo apt install libcurl4-openssl-dev`
 
 # Venv
 `python3 -m venv .venv`

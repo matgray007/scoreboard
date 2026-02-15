@@ -11,6 +11,8 @@
 #include <signal.h>
 #include <Magick++.h>
 #include <magick/image.h>
+#include <curl/curl.h>
+#include <vector>
 
 using namespace rgb_matrix;
 // CONSTANTS
@@ -141,6 +143,42 @@ void CopyHalfImage(const Magick::Image &image, Canvas *canvas, int offset_x = 0,
             }
         }
     }
+}
+
+size_t write_callback(void* contents, size_t size, size_t nmemb, void* userp) {
+    size_t total_size = size * nmemb;
+    std::vector<uint8_t>* buffer = static_cast<std::vector<uint8_t>*>(userp);
+    buffer->insert(buffer->end(), (uint8_t*)contents, (uint8_t*)contents + total_size);
+    return total_size;
+}
+
+Magick::Image load_image_from_url(const std::string& url) {
+    // Download image data
+    std::vector<uint8_t> buffer;
+    CURL* curl = curl_easy_init();
+    
+    if (!curl) {
+        throw std::runtime_error("Failed to initialize curl");
+    }
+    
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L); // For HTTPS
+    
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    
+    if (res != CURLE_OK || buffer.empty()) {
+        throw std::runtime_error("Failed to download image");
+    }
+    
+    // Load from memory blob into Magick::Image
+    Magick::Blob blob(buffer.data(), buffer.size());
+    Magick::Image image(blob);
+    
+    return image;
 }
 
 // Global flag for interrupt handling
@@ -475,19 +513,32 @@ void writeLargeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
 void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                  rgb_matrix::Font &large_font, rgb_matrix::Font &medium_font,
                  rgb_matrix::Font &small_font) {
+    int scrolling_speed = 3; // Adjust this value to increase/decrease scrolling speed (letters per second)
+    int delay_speed_usec = 1000000 / scrolling_speed / medium_font.CharacterWidth('W');
     while (!interrupt_received) {
         offscreen->Fill(0, 0, 0);
         Json::Value current_scores = readScores();
-        std::string song = current_scores["currently_playing"]["song"].asString();
-        std::string artist = current_scores["currently_playing"]["artist"].asString();
-        std::string album_art = current_scores["currently_playing"]["album_art"].asString();
-        Magick::Image image(url);
-        image.scale(Magick::Geometry(height, height));
-        CopyImageToCanvas(image, offscreen);
-        // rgb_matrix::DrawText(offscreen, medium_font,
-        //                    height, 1 + medium_font.baseline(),
-        //                    details.white, NULL, song.c_str(),
-        //                    0);
+        if (!current_scores.empty() && current_scores["currently_playing"]["song"].asString() != "") {
+            std::string song = current_scores["currently_playing"]["song"].asString();
+            std::string artist = current_scores["currently_playing"]["artist"].asString();
+            std::string album_art = current_scores["currently_playing"]["album_art"].asString();
+            Magick::Image image = load_image_from_url(album_art);
+            image.scale(Magick::Geometry(height, height));
+            int x = width;
+            int length = 0;
+
+            while (!interrupt_received && --x + length >= (width / 2)) {
+                offscreen->Fill(0, 0, 0);
+                length = rgb_matrix::DrawText(offscreen, medium_font,
+                           x, 1 + medium_font.baseline(),
+                           Color(255, 255, 255), NULL, song.c_str(),
+                           0);
+                CopyImageToCanvas(image, offscreen);
+                offscreen = matrix->SwapOnVSync(offscreen);
+                usleep(delay_speed_usec);
+            }
+        }
+        // usleep(5 * 1000000); // Display for 10 seconds 5000000
     }
         
 }
@@ -565,6 +616,9 @@ int main(int argc, char *argv[]) {
     } else if (mode == "large-logos") {
         Magick::InitializeMagick(*argv);
         writeLargeLogos(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
+    } else if (mode == "spotify") {
+        Magick::InitializeMagick(*argv);
+        writeSpotify(matrix, offscreen, config, large_font, medium_font, small_font);
     } else {
         std::cerr << "Invalid mode selected. Use 'scoreboard' or 'logos'." << std::endl;
         return 1;
