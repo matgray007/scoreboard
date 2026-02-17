@@ -13,6 +13,7 @@
 #include <magick/image.h>
 #include <curl/curl.h>
 #include <vector>
+#include <cstdlib>
 
 using namespace rgb_matrix;
 // CONSTANTS
@@ -515,6 +516,13 @@ void writeLargeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
     }
 }
 
+// Animation for when a team scores a field goald
+void writeFieldGoal(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config) {
+    offscreen->Fill(0, 0, 0);
+    // TODO: write an animation for when a team scores a field goal
+    
+}
+
 // Spotify mode
 void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                  rgb_matrix::Font &large_font, rgb_matrix::Font &medium_font,
@@ -553,6 +561,91 @@ void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
         }
     }
         
+}
+
+void updateClockBackgroundValues(int** values, int** newValues, int width, int height) {
+    for (int x = 0; x < width; ++x) {
+        for (int y = 0; y < height; ++y) {
+            newValues[x][y] = values[x][y];
+        }
+    }
+
+    for (int x = 0; x < width; ++x) {
+        for (int y = 0; y < height; ++y) {
+            if (values[x][y] == 3) {
+                newValues[x][y] = 2;
+
+                if (x < width - 1) {
+                    newValues[x + 1][y] = 3;
+                }
+            } else if (values[x][y] == 2) {
+                newValues[x][y] = 1;
+
+                if (x < width - 1) {
+                    newValues[x + 1][y] = 2;
+                }
+            } else if (values[x][y] == 1) {
+                newValues[x][y] = 0;
+            } else if (x == 0) {
+                int randVal = rand() % 1000;
+                if (randVal < 10) { // Adjust this value to increase/decrease the density of the "snow"
+                    newValues[x][y] = 2;
+                }
+            }
+        }
+    }
+    // The demo now loops through newValues and updates values with the vals.
+    // This function intentionally does not return anything to avoid callers
+    // accidentally aliasing the two buffers.
+}
+
+void writeClock(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, rgb_matrix::Font &large_font) {
+
+    int width_ = offscreen->width();
+    int height_ = offscreen->height();
+
+        // Allocate memory (zero-initialize)
+        int** values_ = new int*[width_];
+        for (int x = 0; x < width_; ++x) {
+            values_[x] = new int[height_]();
+        }
+        int** newValues_ = new int*[width_];
+        for (int x = 0; x < width_; ++x) {
+            newValues_[x] = new int[height_]();
+        }
+    // Main loop
+    while (!interrupt_received) {
+        offscreen->Fill(0, 0, 0);
+        // Update into the secondary buffer, then swap pointers so we always
+        // read from `values_` and write into `newValues_` the next frame.
+        updateClockBackgroundValues(values_, newValues_, width_, height_);
+        int** tmp = values_;
+        values_ = newValues_;
+        newValues_ = tmp;
+        // TODO: Instead of hardcoding the colors, have it slowly fade from one to another
+        for (int x = 0; x < width_; ++x) {
+            for (int y = 0; y < height_; ++y) {
+                if (values_[x][y] == 3) {
+                    offscreen->SetPixel(x, y, 0, 200, 200);
+                } else if (values_[x][y] == 2) {
+                    offscreen->SetPixel(x, y, 0, 100, 100);
+                } else if (values_[x][y] == 1) {
+                    offscreen->SetPixel(x, y, 0, 50, 50);
+                }
+            }
+        }
+        time_t now = time(0);
+        struct tm *localtm = localtime(&now);
+        char buffer[6];
+        strftime(buffer, sizeof(buffer), "%H:%M", localtm);
+        std::string time_str(buffer);
+        rgb_matrix::DrawText(offscreen, large_font,
+                    width / 3, height / 2 + large_font.baseline(),
+                    Color(255, 255, 255), NULL, time_str.c_str(),
+                    0); 
+        offscreen = matrix->SwapOnVSync(offscreen);
+        usleep(100000); // Update every 100 ms. This makes the streaks travel faster/slower (once per iteration)
+    }
 }
 
 
@@ -635,6 +728,8 @@ int main(int argc, char *argv[]) {
         } else if (mode == "spotify") {
             Magick::InitializeMagick(*argv);
             writeSpotify(matrix, offscreen, config, large_font, medium_font, small_font);
+        } else if (mode == "clock") {
+            writeClock(matrix, offscreen, config, large_font);
         } else {
             std::cerr << "Invalid mode selected. Use 'scoreboard' or 'logos'." << std::endl;
             return 1;
