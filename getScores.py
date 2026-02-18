@@ -98,7 +98,7 @@ def main():
         if mode == "spotify":
             curr = getSong(access_token)
             
-        elif mode == "scores":
+        elif mode == "scoreboard" or mode == "logos" or mode == "large-logos" :
             curr = getScores(config["liveOnly"], config["league"])
         elif mode == "news":
             curr = getNews(config["league"])

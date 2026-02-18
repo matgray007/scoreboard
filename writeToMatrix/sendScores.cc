@@ -14,6 +14,7 @@
 #include <curl/curl.h>
 #include <vector>
 #include <cstdlib>
+#include <atomic>
 
 using namespace rgb_matrix;
 // CONSTANTS
@@ -189,7 +190,7 @@ static void InterruptHandler(int signo) {
 }
 
 // Global flag for SIGHUP handling. It will be used to reload the config without restarting the program
-volatile bool sighup_received = false;
+std::atomic<bool> sighup_received{false}; // TODO: Replace with volatile again to see if the issue is fixed
 static void SighupHandler(int signo) {
     sighup_received = true;
 }
@@ -228,6 +229,18 @@ Json::Value readConfig() {
     Json::parseFromStream(builder, file, &config, &errs);
     file.close();
     return config;
+}
+
+
+Json::Value readMode() {
+    std::string mode_path = "../mode.json";
+    std::ifstream file(mode_path, std::ifstream::binary);
+    Json::Value mode;
+    Json::CharReaderBuilder builder;
+    std::string errs;
+    Json::parseFromStream(builder, file, &mode, &errs);
+    file.close();
+    return mode;
 }
 
 // Read in the current scores JSON file and return the corresponding object
@@ -358,13 +371,13 @@ void writeScoreboard(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
     
 
     // Main loop to keep the program running
-    while (!interrupt_received) {
+    while (!interrupt_received && !sighup_received) {
         // Read in currentScores.json
         Json::Value current_scores = readScores();
 
         // Loop through each game in current_scores
         for (const auto& game : current_scores["games"]) {
-            if (interrupt_received) {
+            if (interrupt_received || sighup_received) {
                 break;
             }
             offscreen->Fill(0, 0, 0);
@@ -409,12 +422,12 @@ void writeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
     int width = offscreen->width();
     int height = offscreen->height();
     Json::Value overallConfig = readConfig();
-    while (!interrupt_received) {
+    while (!interrupt_received && !sighup_received) {
         // Read in currentScores.json
         Json::Value current_scores = readScores();
         // Loop through each game in current_scores
         for (const auto& game : current_scores["games"]) {
-            if (interrupt_received) {
+            if (interrupt_received || sighup_received) {
                 break;
             }
             offscreen->Fill(0, 0, 0);
@@ -461,12 +474,12 @@ void writeLargeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
     int width = offscreen->width();
     int height = offscreen->height();
     Json::Value overallConfig = readConfig();
-    while (!interrupt_received) {
+    while (!interrupt_received && !sighup_received) {
         // Read in currentScores.json
         Json::Value current_scores = readScores();
         // Loop through each game in current_scores
         for (const auto& game : current_scores["games"]) {
-            if (interrupt_received) {
+            if (interrupt_received || sighup_received) {
                 break;
             }
             // Extract game details
@@ -529,9 +542,8 @@ void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                  rgb_matrix::Font &small_font) {
     int scrolling_speed = 3; // Adjust this value to increase/decrease scrolling speed (letters per second)
     int delay_speed_usec = 1000000 / scrolling_speed / medium_font.CharacterWidth('W');
-
-    while (!interrupt_received) {
-        offscreen->Fill(0, 0, 0);
+    std::cout << "sighup_received " << sighup_received << std::endl;
+    while (!interrupt_received && !sighup_received) {
         Json::Value current_scores = readScores();
         if (!current_scores.empty() && current_scores["currently_playing"]["song"].asString() != "") {
             std::string song = current_scores["currently_playing"]["song"].asString();
@@ -544,7 +556,7 @@ void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
             int artist_length = 0;
             
 
-            while (!interrupt_received && (--x + song_length >= (width / 2) || x + artist_length >= (width / 2))) {
+            while (!interrupt_received && !sighup_received && (--x + song_length >= (width / 2) || x + artist_length >= (width / 2))) {
                 offscreen->Fill(0, 0, 0);
                 song_length = rgb_matrix::DrawText(offscreen, medium_font,
                            x, 1 + medium_font.baseline(),
@@ -557,9 +569,15 @@ void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                 CopyImageToCanvas(image, offscreen);
                 offscreen = matrix->SwapOnVSync(offscreen);
                 usleep(delay_speed_usec);
+
+                if (interrupt_received || sighup_received) break;
             }
+            std::cout << "Inner loop exited (author/song done printing)" << std::endl;
+        } else {
+            // std::cout << "empty curr scores or missing song" << std::endl;
         }
     }
+    std::cout << "Exiting spotify loop" << std::endl;
         
 }
 
@@ -614,7 +632,7 @@ void writeClock(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, r
             newValues_[x] = new int[height_]();
         }
     // Main loop
-    while (!interrupt_received) {
+    while (!interrupt_received && !sighup_received) {
         offscreen->Fill(0, 0, 0);
         // Update into the secondary buffer, then swap pointers so we always
         // read from `values_` and write into `newValues_` the next frame.
@@ -650,6 +668,7 @@ void writeClock(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, r
 
 
 int main(int argc, char *argv[]) {
+    std::cout << "Starting matrix" << std::endl;
     // TODO: Set the defaults for rows, cols, led limit refresh, led slowdown gpio, and gpio mapping. 
     // Arg parsing.
     RGBMatrix::Options matrix_options;
@@ -659,13 +678,23 @@ int main(int argc, char *argv[]) {
         return usage(argv[0]);
     }
 
+    // Load in mode config
+    Json::Value mode_file = readMode();
+    // Load in team config
+    Json::Value config = readTeamConfig();
+    // i.e. config["Arizona Cardinals"]["shortName"]
+
     // Set up defaults
-    std::string mode = "logos"; // TODO: Read in the mode from mode.json here. If the mode is provided as a flag, then override the mode.json file
+    std::string mode = mode_file["mode"].asString(); // TODO: Read in the mode from mode.json here. If the mode is provided as a flag, then override the mode.json file
     const char *large_bdf_font_file = "../matrix/fonts/8x13B.bdf";
     const char *medium_bdf_font_file = "../matrix/fonts/5x8.bdf";
     const char *small_bdf_font_file = "../matrix/fonts/4x6.bdf";
     int opt;
     bool favorite_only = false;
+
+    
+
+
     while ((opt = getopt(argc, argv, "d:o")) != -1) {// Within this empty string, add any command line options you want to support. i.e. "a:b:cd" options a and b require an associated value, c and do do not
         switch (opt) {
         case 'd':
@@ -679,9 +708,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Load in team config
-    Json::Value config = readTeamConfig();
-    // i.e. config["Arizona Cardinals"]["shortName"]
+    
 
     // Load font for displaying text
     rgb_matrix::Font large_font;
@@ -715,6 +742,12 @@ int main(int argc, char *argv[]) {
     signal(SIGHUP, SighupHandler);
     while (!interrupt_received) {
         if (sighup_received) {
+            // TODO: Clear the matrix!
+            std::cout << "We received the sighup" << std::endl;
+            sighup_received = false;
+            mode_file = readMode();
+            mode = mode_file["mode"].asString();
+            std::cout << "New mode: " << mode << std::endl;
             // TODO: reload both the config and the mode.json
         }
         if (mode == "scoreboard") {

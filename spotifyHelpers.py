@@ -56,8 +56,15 @@ def getSong(access_token):
         return None
     
     response_data = response.json()
-    trimmed_data = {"currently_playing": {"song": response_data["currently_playing"]["name"], "artist": response_data["currently_playing"]["artists"][0]["name"], "album_art": response_data["currently_playing"]["album"]["images"][0]["url"]} if response_data["currently_playing"] else None}
-    
+    try:
+
+        trimmed_data = {"currently_playing": {"song": response_data["currently_playing"]["name"], "artist": response_data["currently_playing"]["artists"][0]["name"], "album_art": response_data["currently_playing"]["album"]["images"][0]["url"]} if response_data["currently_playing"] else None}
+    except KeyError:
+        try:
+            trimmed_data = {"currently_playing": {"song": response_data["currently_playing"]["name"], "artist": response_data["currently_playing"]["show"]["name"], "album_art": response_data["currently_playing"]["show"]["images"][0]["url"]} if response_data["currently_playing"] else None}
+        except KeyError:
+            print("Error: Unexpected response structure")
+            return None
     return trimmed_data
 
 
