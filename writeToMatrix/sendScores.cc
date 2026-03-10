@@ -362,7 +362,20 @@ void drawField(FrameCanvas *offscreen, GameDetails details) {
 
 }
 
-
+void noGames(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, rgb_matrix::Font &medium_font) {
+    offscreen->Fill(0, 0, 0);
+    rgb_matrix::DrawText(offscreen, medium_font,
+                           0, medium_font.baseline(),
+                           Color(255, 255, 255), NULL, "There are no games",
+                           0);
+    rgb_matrix::DrawText(offscreen, medium_font,
+                           0, 8 + medium_font.baseline(),
+                           Color(255, 255, 255), NULL, "to display.",
+                           0);
+    // Double buffer swap
+    offscreen = matrix->SwapOnVSync(offscreen);
+    usleep(8 * 1000000);
+}
 
 // Cycle through games in currentScores.json and display them in a traditional scoreboard format
 void writeScoreboard(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
@@ -410,7 +423,9 @@ void writeScoreboard(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
             usleep(8 * 1000000); // Display for 5 seconds 5000000
 
         }
-
+        if (current_scores["games"].size() == 0) {
+            noGames(matrix, offscreen, config, medium_font);
+        }
     }
 }
 
@@ -461,6 +476,9 @@ void writeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                 offscreen = matrix->SwapOnVSync(offscreen);
                 usleep(8 * 1000000); // Display for 5 seconds 5000000
             }
+        }
+        if (current_scores["games"].size() == 0) {
+            noGames(matrix, offscreen, config, medium_font);
         }
     }
 }
@@ -520,11 +538,9 @@ void writeLargeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
                 offscreen = matrix->SwapOnVSync(offscreen);
                 usleep(8 * 1000000); // Display for 5 seconds 5000000
             }
-
-
-
-            
-
+        }
+        if (current_scores["games"].size() == 0) {
+            noGames(matrix, offscreen, config, medium_font);
         }
     }
 }
@@ -542,7 +558,6 @@ void writeSpotify(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
                  rgb_matrix::Font &small_font) {
     int scrolling_speed = 3; // Adjust this value to increase/decrease scrolling speed (letters per second)
     int delay_speed_usec = 1000000 / scrolling_speed / medium_font.CharacterWidth('W');
-    std::cout << "sighup_received " << sighup_received << std::endl;
     while (!interrupt_received && !sighup_received) {
         Json::Value current_scores = readScores();
         if (!current_scores.empty() && current_scores["currently_playing"]["song"].asString() != "") {
@@ -685,7 +700,7 @@ int main(int argc, char *argv[]) {
     // i.e. config["Arizona Cardinals"]["shortName"]
 
     // Set up defaults
-    std::string mode = mode_file["mode"].asString(); // TODO: Read in the mode from mode.json here. If the mode is provided as a flag, then override the mode.json file
+    std::string mode = mode_file["mode"].asString();
     const char *large_bdf_font_file = "../matrix/fonts/8x13B.bdf";
     const char *medium_bdf_font_file = "../matrix/fonts/5x8.bdf";
     const char *small_bdf_font_file = "../matrix/fonts/4x6.bdf";
@@ -742,14 +757,17 @@ int main(int argc, char *argv[]) {
     signal(SIGHUP, SighupHandler);
     while (!interrupt_received) {
         if (sighup_received) {
-            // TODO: Clear the matrix!
+            offscreen->Fill(0, 0, 0);
+            offscreen = matrix->SwapOnVSync(offscreen);
             std::cout << "We received the sighup" << std::endl;
             sighup_received = false;
             mode_file = readMode();
             mode = mode_file["mode"].asString();
             std::cout << "New mode: " << mode << std::endl;
-            // TODO: reload both the config and the mode.json
+            usleep(1 * 1000000); // Delay just a bit so hopefully the backend will respond in time
+            // TODO: Loading animation instead of blank screen for 1 second
         }
+        std::cout << "Starting mode " << mode << std::endl;
         if (mode == "scoreboard") {
             writeScoreboard(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
         } else if (mode == "logos") {

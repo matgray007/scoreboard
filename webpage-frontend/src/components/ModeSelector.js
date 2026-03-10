@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { sendMode } from "../api.ts";
+import { useState, useEffect } from "react";
+import { sendMode, getMode } from "../api.ts";
 
-export default function ModeSelector() {
+export default function ModeSelector({ onModeChange }) {
   const [mode, setMode] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const modes = [
     {label: "Scoreboard", value: "scoreboard"},
@@ -12,16 +14,36 @@ export default function ModeSelector() {
     {label: "Clock", value: "clock"}
   ];
 
+  useEffect(() => {
+    const fetchMode = async () => {
+      console.log("Fetching the mode");
+      try {
+        const response = await getMode();
+        setMode(response['mode']);
+        onModeChange?.(response['mode']);
+      } catch (err) {
+        setError(err.message);
+        console.log("Error");
+      } finally {
+        setLoading(false);
+        console.log("Loading");
+      }
+    };
+    fetchMode();
+  }, []);
+  
+
   const handleUpdate  = async () => {
-    // TODO: This is where the api call will go to update the matrix mode on the backend
     if (mode) {
       await sendMode({"mode": mode.toLowerCase()});
+      onModeChange?.(mode.toLowerCase());
       console.log(`Selected mode: ${mode}`);
     } else {
       alert("Please select a mode first.");
     }
   };
-
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
   return (
     <div style={styles.container}>
       <div style={styles.card}>
@@ -53,7 +75,6 @@ export default function ModeSelector() {
 
 const styles = {
   container: {
-    minHeight: "100vh",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -62,6 +83,7 @@ const styles = {
   card: {
     backgroundColor: "#ffffff",
     padding: "24px",
+    margin: "10px",
     borderRadius: "12px",
     width: "320px",
     boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
