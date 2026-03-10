@@ -13,6 +13,7 @@ Inputs:
     sport: string indicating which sport to get scores for (nfl or nba)
 '''
 def getScores(liveOnly, sport):
+    print("getting scores...")
     if (sport == 'nba'):
         response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard')
     elif (sport == 'nfl'):
@@ -36,6 +37,26 @@ def getScores(liveOnly, sport):
     return json
 
 # TODO: Retain who has the ball, down and distance, and timeouts remaining
+
+def getNews(sport):
+    if (sport == 'nba'):
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news')
+    elif (sport == 'nfl'):
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news')
+    else:
+        response = {}
+    json = {'news': []}
+    news = []
+    for article in response.json()['articles']:
+        team = []
+        temp = (category for category in article['categories'] if category['type'] == 'team')
+        for team_temp in temp:
+            team.append(team_temp['description'])
+        news.append({'headline': article['headline'], 'description': article['description'], 'team': team})
+    # There can be multiple teams, so just the first team is taken for simplicity. This can be changed to a list of teams if needed
+    # The teams can include college teams, which are not includes in the team_config, so they will need to be filtered on the c++ side
+    json['news'] = news
+    return news
 
 
 '''
@@ -77,10 +98,10 @@ def main():
         if mode == "spotify":
             curr = getSong(access_token)
             
-        elif mode == "scores":
+        elif mode == "scoreboard" or mode == "logos" or mode == "large-logos" :
             curr = getScores(config["liveOnly"], config["league"])
-            with open('currentScores.json', 'w') as file:
-                file.write(dumps(curr))
+        elif mode == "news":
+            curr = getNews(config["league"])
         with open('currentScores.json', 'w') as file:
                 file.write(dumps(curr))
 
