@@ -5,6 +5,7 @@
     #include "led-matrix.h"
     #include "graphics.h"
     #include <jsoncpp/json/json.h>
+    #include <optional>
 
     using rgb_matrix::Color;
 
@@ -21,6 +22,8 @@
         Color secondPrimaryColor;
         Color secondSecondaryColor;
         Color white = Color(255, 255, 255);
+        std::string firstTeamLogoURL;
+        std::string secondTeamLogoURL;
     };
 
     GameDetails extractGameDetails(const Json::Value& game, const Json::Value& config);

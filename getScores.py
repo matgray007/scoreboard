@@ -18,6 +18,8 @@ def getScores(liveOnly, sport):
         response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard')
     elif (sport == 'nfl'):
         response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard')
+    elif (sport == 'ncaab'):
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard')
     else:
         response = {}
     events = response.json()['events']
@@ -28,7 +30,7 @@ def getScores(liveOnly, sport):
         # status- pre: prior to game started; in: game is live; post: game has ended
         for competition in game['competitions']:
             for competitor in competition['competitors']:
-                currObj['competitors'].append({'displayName': competitor['team']['displayName'], 'score': competitor['score'], 'homeAway': competitor['homeAway']})
+                currObj['competitors'].append({'displayName': competitor['team']['displayName'], 'abbreviation': competitor['team']['abbreviation'], 'logo': competitor['team']['logo'], 'score': competitor['score'], 'homeAway': competitor['homeAway']})
         games.append(currObj)
     if liveOnly: # Only games that are currently in progress
         json['games'] = list(filter(lambda x: x['status'] == 'in', games))

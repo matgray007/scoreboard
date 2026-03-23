@@ -15,6 +15,7 @@
 #include <vector>
 #include <cstdlib>
 #include <atomic>
+#include <sys/stat.h>
 
 using namespace rgb_matrix;
 // CONSTANTS
@@ -51,23 +52,38 @@ GameDetails extractGameDetails(const Json::Value& game, const Json::Value& confi
     int secondTeamInd = firstTeamInd == 0 ? 1 : 0;
     std::string firstTeamLong = game["competitors"][firstTeamInd]["displayName"].asString();
     std::string secondTeamLong = game["competitors"][secondTeamInd]["displayName"].asString();
-    details.firstTeam = config[firstTeamLong]["shortName"].asString();
-    details.secondTeam = config[secondTeamLong]["shortName"].asString();
+    if (config.isMember(firstTeamLong) && config.isMember(secondTeamLong)) {
+        // Using the dictionary created in team_config.json
+        details.firstTeam = config[firstTeamLong]["shortName"].asString();
+        details.secondTeam = config[secondTeamLong]["shortName"].asString();
+        details.firstPrimaryColor = Color(config[firstTeamLong]["colors"]["primary"][0].asInt(),
+                                        config[firstTeamLong]["colors"]["primary"][1].asInt(),
+                                        config[firstTeamLong]["colors"]["primary"][2].asInt());
+        details.firstSecondaryColor = Color(config[firstTeamLong]["colors"]["secondary"][0].asInt(),
+                                            config[firstTeamLong]["colors"]["secondary"][1].asInt(),
+                                            config[firstTeamLong]["colors"]["secondary"][2].asInt());
+        details.secondPrimaryColor = Color(config[secondTeamLong]["colors"]["primary"][0].asInt(),
+                                        config[secondTeamLong]["colors"]["primary"][1].asInt(),
+                                        config[secondTeamLong]["colors"]["primary"][2].asInt());
+        details.secondSecondaryColor = Color(config[secondTeamLong]["colors"]["secondary"][0].asInt(),
+                                            config[secondTeamLong]["colors"]["secondary"][1].asInt(),
+                                            config[secondTeamLong]["colors"]["secondary"][2].asInt());
+    } else {
+        // Only using information gathered from the API
+        details.firstTeam =  game["competitors"][firstTeamInd]["abbreviation"].asString();
+        details.secondTeam = game["competitors"][secondTeamInd]["abbreviation"].asString();
+        details.firstTeamLogoURL = game["competitors"][firstTeamInd]["logo"].asString();
+        details.secondTeamLogoURL = game["competitors"][secondTeamInd]["logo"].asString();
+        details.firstPrimaryColor = Color(255, 255, 255);
+        details.firstSecondaryColor = Color(255, 255, 255);
+        details.secondPrimaryColor = Color(255, 255, 255);
+        details.secondSecondaryColor = Color(255, 255, 255);
+    }
+    std::cout << "First team " << details.firstTeam << std::endl;
     details.firstScore = game["competitors"][firstTeamInd]["score"].asString();
     details.secondScore = game["competitors"][secondTeamInd]["score"].asString();
 
-    details.firstPrimaryColor = Color(config[firstTeamLong]["colors"]["primary"][0].asInt(),
-                                      config[firstTeamLong]["colors"]["primary"][1].asInt(),
-                                      config[firstTeamLong]["colors"]["primary"][2].asInt());
-    details.firstSecondaryColor = Color(config[firstTeamLong]["colors"]["secondary"][0].asInt(),
-                                        config[firstTeamLong]["colors"]["secondary"][1].asInt(),
-                                        config[firstTeamLong]["colors"]["secondary"][2].asInt());
-    details.secondPrimaryColor = Color(config[secondTeamLong]["colors"]["primary"][0].asInt(),
-                                       config[secondTeamLong]["colors"]["primary"][1].asInt(),
-                                       config[secondTeamLong]["colors"]["primary"][2].asInt());
-    details.secondSecondaryColor = Color(config[secondTeamLong]["colors"]["secondary"][0].asInt(),
-                                         config[secondTeamLong]["colors"]["secondary"][1].asInt(),
-                                         config[secondTeamLong]["colors"]["secondary"][2].asInt());
+    
     return details;
 }
 
@@ -180,6 +196,51 @@ Magick::Image load_image_from_url(const std::string& url) {
     Magick::Blob blob(buffer.data(), buffer.size());
     Magick::Image image(blob);
     
+    return image;
+}
+
+bool IsImageAllBlack(const Magick::Image& image, double threshold = 0.05) {
+    Magick::Image grayscale = image;
+    grayscale.type(Magick::GrayscaleType);
+    grayscale.modifyImage();
+
+    int width = grayscale.columns();
+    int height = grayscale.rows();
+
+    const Magick::PixelPacket* pixels = grayscale.getConstPixels(0, 0, width, height);
+
+    double totalBrightness = 0.0;
+    int opaqueCount = 0;
+
+    for (int i = 0; i < width * height; i++) {
+        if (pixels[i].opacity == TransparentOpacity) continue;
+        totalBrightness += (double)pixels[i].red / MaxRGB;
+        opaqueCount++;
+    }
+
+    if (opaqueCount == 0) return false; // Skip transparent
+
+    double meanBrightness = totalBrightness / opaqueCount;
+    return meanBrightness < threshold;
+}
+
+Magick::Image InvertNonTransparentPixels(Magick::Image image) {
+    image.modifyImage();
+    int width = image.columns();
+    int height = image.rows();
+    Magick::Pixels pixelCache(image);
+    Magick::PixelPacket* pixels = pixelCache.get(0, 0, width, height);
+    
+    for (int i = 0; i < width * height; i++) {
+        // Skip fully transparent pixels
+        if (pixels[i].opacity == TransparentOpacity) continue;
+        
+        pixels[i].red   = MaxRGB - pixels[i].red;
+        pixels[i].green = MaxRGB - pixels[i].green;
+        pixels[i].blue  = MaxRGB - pixels[i].blue;
+    }
+    
+    pixelCache.sync();
     return image;
 }
 
@@ -407,6 +468,7 @@ void writeScoreboard(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
             writeScores(offscreen, details, large_font);
 
             // First team name top left-ish
+            std::cout << " About to write " << details.firstTeam << std::endl;
             rgb_matrix::DrawText(offscreen, medium_font,
                            team1_x, team_y + medium_font.baseline(),
                            details.firstPrimaryColor, NULL, details.firstTeam.c_str(),
@@ -459,23 +521,51 @@ void writeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
             // Draw the field
             // drawField(offscreen, details);
 
-            // Retrieve logo file names
-            std::string firstLogo = retrieveLogoPath(details.firstTeam, overallConfig);
-            std::string secondLogo = retrieveLogoPath(details.secondTeam, overallConfig);
 
-            // Display logos
-            ImageVector firstImage = LoadImageAndScaleImage(firstLogo.c_str(),
-                                              height / 2,
-                                              height / 2);
-            ImageVector secondImage = LoadImageAndScaleImage(secondLogo.c_str(),
-                                              height / 2,
-                                              height / 2);
-            if (firstImage.size() > 0 && secondImage.size() > 0) {
-                CopyImageToCanvas(firstImage[0], offscreen, 1, 1);
-                CopyImageToCanvas(secondImage[0], offscreen, width - (height / 2) - 1, 1);
-                offscreen = matrix->SwapOnVSync(offscreen);
-                usleep(8 * 1000000); // Display for 5 seconds 5000000
+            ImageVector firstImageVec, secondImageVec;
+            Magick::Image firstImageMagick, secondImageMagick;
+            bool usedVec = false;
+
+            auto fileExists = [](const std::string& path) {
+                struct stat buffer;
+                return (stat(path.c_str(), &buffer) == 0);
+            };
+
+            try {
+                std::string firstLogo = retrieveLogoPath(details.firstTeam, overallConfig);
+                std::string secondLogo = retrieveLogoPath(details.secondTeam, overallConfig);
+
+                if (!fileExists(firstLogo) || !fileExists(secondLogo)) {
+                    throw std::runtime_error("Logo file not found");
+                }
+
+                firstImageVec = LoadImageAndScaleImage(firstLogo.c_str(), height / 2, height / 2);
+                secondImageVec = LoadImageAndScaleImage(secondLogo.c_str(), height / 2, height / 2);
+                usedVec = true;
+            } catch (std::exception &e) {
+                firstImageMagick = load_image_from_url(details.firstTeamLogoURL);
+                firstImageMagick.scale(Magick::Geometry(height / 2, height / 2));
+                if (IsImageAllBlack(firstImageMagick)) {
+                    firstImageMagick = InvertNonTransparentPixels(firstImageMagick);
+                }
+                secondImageMagick = load_image_from_url(details.secondTeamLogoURL);
+                secondImageMagick.scale(Magick::Geometry(height / 2, height / 2));
+                if (IsImageAllBlack(secondImageMagick)) {
+                    secondImageMagick = InvertNonTransparentPixels(secondImageMagick);
+                }
             }
+
+            if (usedVec) {
+                if (firstImageVec.size() > 0 && secondImageVec.size() > 0) {
+                    CopyImageToCanvas(firstImageVec[0], offscreen, 1, 1);
+                    CopyImageToCanvas(secondImageVec[0], offscreen, width - (height / 2) - 1, 1);
+                }
+            } else {
+                CopyImageToCanvas(firstImageMagick, offscreen, 1, 1);
+                CopyImageToCanvas(secondImageMagick, offscreen, width - (height / 2) - 1, 1);
+            }
+            offscreen = matrix->SwapOnVSync(offscreen);
+            usleep(8 * 1000000); // Display for 5 seconds 5000000
         }
         if (current_scores["games"].size() == 0) {
             noGames(matrix, offscreen, config, medium_font);
@@ -520,24 +610,50 @@ void writeLargeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
             // Draw the field
             // drawField(offscreen, details);
 
-            // Retrieve logo file names
-            std::string firstLogo = retrieveLogoPath(details.firstTeam, overallConfig);
-            std::string secondLogo = retrieveLogoPath(details.secondTeam, overallConfig);
+            ImageVector firstImageVec, secondImageVec;
+            Magick::Image firstImageMagick, secondImageMagick;
+            bool usedVec = false;
 
+            auto fileExists = [](const std::string& path) {
+                struct stat buffer;
+                return (stat(path.c_str(), &buffer) == 0);
+            };
 
-            // Display logos
-            ImageVector firstImage = LoadImageAndScaleImage(firstLogo.c_str(),
-                                              height,
-                                              height);
-            ImageVector secondImage = LoadImageAndScaleImage(secondLogo.c_str(),
-                                              height,
-                                              height);
-            if (firstImage.size() > 0 && secondImage.size() > 0) {
-                CopyHalfImage(firstImage[0], offscreen, 0, 0, false);
-                CopyHalfImage(secondImage[0], offscreen, width - (3 * height / 5), 0, true);
-                offscreen = matrix->SwapOnVSync(offscreen);
-                usleep(8 * 1000000); // Display for 5 seconds 5000000
+            try {
+                std::string firstLogo = retrieveLogoPath(details.firstTeam, overallConfig);
+                std::string secondLogo = retrieveLogoPath(details.secondTeam, overallConfig);
+
+                if (!fileExists(firstLogo) || !fileExists(secondLogo)) {
+                    throw std::runtime_error("Logo file not found");
+                }
+
+                firstImageVec = LoadImageAndScaleImage(firstLogo.c_str(), height, height);
+                secondImageVec = LoadImageAndScaleImage(secondLogo.c_str(), height, height);
+                usedVec = true;
+            } catch (std::exception &e) {
+                firstImageMagick = load_image_from_url(details.firstTeamLogoURL);
+                firstImageMagick.scale(Magick::Geometry(height, height));
+                if (IsImageAllBlack(firstImageMagick)) {
+                    firstImageMagick = InvertNonTransparentPixels(firstImageMagick);
+                }
+                secondImageMagick = load_image_from_url(details.secondTeamLogoURL);
+                secondImageMagick.scale(Magick::Geometry(height, height));
+                if (IsImageAllBlack(secondImageMagick)) {
+                    secondImageMagick = InvertNonTransparentPixels(secondImageMagick);
+                }
             }
+
+            if (usedVec) {
+                if (firstImageVec.size() > 0 && secondImageVec.size() > 0) {
+                    CopyHalfImage(firstImageVec[0], offscreen, 0, 0, false);
+                    CopyHalfImage(secondImageVec[0], offscreen, width - (3 * height / 5), 0, true);
+                }
+            } else {
+                CopyHalfImage(firstImageMagick, offscreen, 0, 0, false);
+                CopyHalfImage(secondImageMagick, offscreen, width - (3 * height / 5), 0, true);
+            }
+            offscreen = matrix->SwapOnVSync(offscreen);
+            usleep(8 * 1000000); // Display for 5 seconds 5000000
         }
         if (current_scores["games"].size() == 0) {
             noGames(matrix, offscreen, config, medium_font);
