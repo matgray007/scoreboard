@@ -1,0 +1,7 @@
+# This file outlines the environment dependencies
+
+python3: "~> 3.123123", file: "requirements.txt"
+libjsoncpp-dev: "~>
+libcurl4-openssl-dev: "~>
+node: "~> lkshfsdflkjdshf", file: "webpage-frontend/package.json"
+
