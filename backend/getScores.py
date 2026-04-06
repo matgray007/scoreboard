@@ -3,7 +3,14 @@ import time
 from json import dumps
 import json
 import os
-import spotifyHelpers
+import backend.spotifyHelpers as spotifyHelpers
+
+
+# CONSTANTS
+
+MODE_FILE = "../mode.json"
+CONFIG_FILE = "../config.json"
+CURRENT_SCORES_FILE = "../currentScores.json"
 
 
 '''
@@ -77,10 +84,10 @@ def getSong(access_token):
 
 
 def main():
-    mode_file_path = os.path.join(os.path.dirname(__file__), 'mode.json')
+    mode_file_path = os.path.join(os.path.dirname(__file__), MODE_FILE)
     with open(mode_file_path, 'r') as mode_file:
         mode_config = json.load(mode_file)
-    config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    config_file_path = os.path.join(os.path.dirname(__file__), CONFIG_FILE)
     with open(config_file_path, 'r') as config_file:
         config = json.load(config_file)
 
@@ -104,7 +111,7 @@ def main():
             curr = getScores(config["liveOnly"], config["league"])
         elif mode == "news":
             curr = getNews(config["league"])
-        with open('currentScores.json', 'w') as file:
+        with open(CURRENT_SCORES_FILE, 'w') as file:
                 file.write(dumps(curr))
 
         time.sleep(sleep_time)

@@ -1,4 +1,4 @@
-# writeToMatrix Makefile
+# frontend Makefile
 
 CXX = g++
 AR = ar

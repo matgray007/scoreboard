@@ -174,7 +174,7 @@ Dependencies can be viewed in [this file](.dependencies).
 
 ### Running the Matrix
 
-Once the necessary dependencies have been installed and both repos have been cloned (this one and Zeller's rpi-rgb-led-matrix library), I would recommend running one of Zeller's demos as a sanity check. These demos can be viewed [here](matrix/examples-api-use/README.md). The matrix frontend code can be compiled by running `make writeToMatrix/sendScores.cc` [#TODO: Double check that this works or maybe we need to navigate to there]. Once it has finished compiling, the executable can be run with a variety of flags. A majority of these flags are hardware-specific, so vary as needed.
+Once the necessary dependencies have been installed and both repos have been cloned (this one and Zeller's rpi-rgb-led-matrix library), I would recommend running one of Zeller's demos as a sanity check. These demos can be viewed [here](matrix/examples-api-use/README.md). The matrix frontend code can be compiled by running `make frontend/sendScores.cc` [#TODO: Double check that this works or maybe we need to navigate to there]. Once it has finished compiling, the executable can be run with a variety of flags. A majority of these flags are hardware-specific, so vary as needed.
 
 
 | Flag | Meaning | Values Used with Above Hardware |
@@ -219,8 +219,6 @@ A [mode.json.copy](mode.json.copy) and a [config.json.copy](config.json.copy) ha
 This project has infinite possible depth and breadth. I hope to explore both of these directions as much as possible. The changes and additions most likely to occur next are improvements to what already exist before expanding in new directions. Here is a nowhere near comprehensive list of improvements:
 
 - Restructure/rename folders
-    - getScores.py should be in a backend folder
-    - writeToMatrix should be in a frontend folder or maybe matrix-interface folder
     - the Zeller repo should be in a better named folder
 - Webpage styling
 - Ability to toggle live only on the webpage [#TODO: This might be done already]
@@ -234,7 +232,7 @@ This project has infinite possible depth and breadth. I hope to explore both of 
     - Scrolls the news across the board and displays the associated team's logo
 - Favorite team-animations
     - Namely touchdowns, field goals, sacks, etc.
-    - Some example API responses for an NFL game are present in [this](nflResponses/) directory.
+    - Some example API responses for an NFL game are present in [this](ESPNResponses/) directory.
 - NFL position on field
     - A thin line 10/12 pixels long that is white(?) up to where the team with the ball currently is
     - Maybe turns red while in the redzone?

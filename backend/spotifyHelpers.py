@@ -5,6 +5,11 @@ import json
 import os
 from urllib.parse import urlencode
 
+# Constants
+SPOTIFY_TOKEN_FILE = '../spotify_token.json'
+SECRETS_FILE = '../secrets.json'
+CONFIG_FILE = '../config.json'
+
 
 
 def get_user_auth_url(client_id, redirect_uri, scope):
@@ -71,8 +76,8 @@ def getSong(access_token):
 
     
 def refreshToken():
-    token_file = 'spotify_token.json'
-    secrets_file_path = os.path.join(os.path.dirname(__file__), 'secrets.json')
+    token_file = SPOTIFY_TOKEN_FILE
+    secrets_file_path = os.path.join(os.path.dirname(__file__), SECRETS_FILE)
     with open(secrets_file_path, 'r') as secrets_file:
         secrets = json.load(secrets_file)
 
@@ -95,10 +100,10 @@ def refreshToken():
 
 def authSetup():
     access_token = None
-    config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    config_file_path = os.path.join(os.path.dirname(__file__), CONFIG_FILE)
     with open(config_file_path, 'r') as config_file:
         config = json.load(config_file)
-    secrets_file_path = os.path.join(os.path.dirname(__file__), 'secrets.json')
+    secrets_file_path = os.path.join(os.path.dirname(__file__), SECRETS_FILE)
     with open(secrets_file_path, 'r') as secrets_file:
         secrets = json.load(secrets_file)
 
@@ -107,7 +112,7 @@ def authSetup():
     redirect_uri = "https://127.0.0.1:8000/callback"  # Must match Spotify Dashboard setting
     scope = "user-read-playback-state user-read-currently-playing"
 
-    token_file = 'spotify_token.json'
+    token_file = SPOTIFY_TOKEN_FILE
 
     if os.path.exists(token_file):
         access_token = refreshToken()
