@@ -189,6 +189,8 @@ Once the necessary dependencies have been installed and both repos have been clo
 
 A [mode.json.copy](mode.json.copy) and a [config.json.copy](config.json.copy) have been included for your convenience. Copy the contents into mode.json and config.json respectively and alter as needed.
 
+The first time running the backend with spotify, you will need to authenticate your account. The prompts in the terminal will walk you through what needs to be done.
+
 
 
 

@@ -3,7 +3,7 @@ import time
 from json import dumps
 import json
 import os
-import backend.spotifyHelpers as spotifyHelpers
+import spotifyHelpers as spotifyHelpers
 
 
 # CONSTANTS

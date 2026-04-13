@@ -427,10 +427,14 @@ void noGames(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, rgb_
     offscreen->Fill(0, 0, 0);
     rgb_matrix::DrawText(offscreen, medium_font,
                            0, medium_font.baseline(),
-                           Color(255, 255, 255), NULL, "There are no games",
+                           Color(255, 255, 255), NULL, "There are",
                            0);
     rgb_matrix::DrawText(offscreen, medium_font,
-                           0, 8 + medium_font.baseline(),
+                          0, 8 + medium_font.baseline(),
+                          Color(255, 255, 255), NULL, "no games",
+                          0);
+    rgb_matrix::DrawText(offscreen, medium_font,
+                           0, 16 + medium_font.baseline(),
                            Color(255, 255, 255), NULL, "to display.",
                            0);
     // Double buffer swap
