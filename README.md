@@ -1,6 +1,8 @@
 # RGB Matrix Display Board
 A real-time display powered by a Raspberry Pi that translates data from external APIs into a formatted visualization on the matrix board.
 
+![Large Logos with Laptop](images/large_logos_with_laptop.jpeg)
+
 ## Author
 Matthew Gray
 
@@ -42,12 +44,12 @@ This project emphasizes real-time processing, hardware-software integration, and
 
 This project has many different modes ranging in both fidelity and application scope. The matrix display scripts (matrix frontend) controls how the data retrieved is displayed. The data retrieval script (matrix backend) controls what is displayed. Both matrix frontend and backend have distinct modes that control their functionality. See the [Configuration](#configuration) section for setting/changing modes.
 
-[#TODO: Add pictures of all of the different frontend modes]
+Images of the application running in the various different modes can be found in the [Images](#images) section below.
 
 ### Frontend
 
 As of 4/5/2026, the matrix display modes include the following:
--  Scoreboard: Displays live and final sports scores from the current day.
+- Scoreboard: Displays live and final sports scores from the current day.
 - Spotify Currently Playing: Displays the current song's album cover with scrolling song name and artist name(s)
 - Clock: Current time (based on Raspberry Pi's current time) with ambient background
 
@@ -70,7 +72,13 @@ In addition to the matrix frontend and backend, a simple React web app with Fast
 [#TODO: Add picture of the webpage]
 
 ### Video Demo
-[#TODO: Add video demo cycling through the different modes]
+
+Click on the below image to view a youtube video of the matrix display board's different modes:
+[![Hyperlink to video](images/clock.jpeg)](https://youtu.be/b0iZcqvFudc)
+
+Click on the below image to view a youtube video of the matrix display board's large logo mode:
+[![Hyperlink to video](images/large_logos_closeup2.jpeg)](https://youtu.be/xod1xzB__D0)
+
 
 ### APIs Used
 
@@ -155,7 +163,11 @@ The data flow diagram is included to give more detail on how the runtime functio
 
 Please view [these wiring guidelines](matrix/wiring.md) for wiring concerns not covered in this section. This section will only go over wiring for setup with the above hardware.
 
-[#TODO: Add wiring images]
+![Wiring Image](images/wiring.jpeg)
+
+Pictured above is the wiring setup used for the creation of this application. 
+
+[#TODO: Expand on this]
 
 ### Software Setup
 
@@ -196,7 +208,7 @@ The first time running the backend with spotify, you will need to authenticate y
 
 ### Running the website
 
-
+[#TODO: Need to do this section]
 
 ## Configuration
 
@@ -223,7 +235,6 @@ This project has infinite possible depth and breadth. I hope to explore both of 
 - Restructure/rename folders
     - the Zeller repo should be in a better named folder
 - Webpage styling
-- Ability to toggle live only on the webpage [#TODO: This might be done already]
 - Ability to toggle favorite only on the webpage
 - "No songs being played currently"
 - "No games today/currently"
@@ -247,3 +258,23 @@ This project has infinite possible depth and breadth. I hope to explore both of 
 -"No songs being played currently"
 -Shutdown pi api
 -Make all sports use the url in the response instead of getting the logo from the repo. Leave original functionality as an option
+
+## Images
+
+- Scoreboard mode depicting a live NBA game:
+![Scoreboard](images/scoreboard.jpeg)
+
+- Logos mode also depicting a live NBA game:
+![Logos](images/logos1.jpeg)
+
+- Large logos mode:
+![Large Logos](images/large_logos1.jpeg)
+
+- A close up of the large logos mode:
+![Large Logos Closeup](images/large_logos_closeup1.jpeg)
+
+- Spotify mode showing the album cover, song name, and artist name of the currently playing song:
+![Spotify](images/spotify.jpeg)
+
+- Close mode displaying the current time with ambient, blue lines racing across the backgroung:
+![Clock](images/clock.jpeg)
