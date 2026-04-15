@@ -603,17 +603,7 @@ void writeLargeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
                 }
             }
 
-            offscreen->Fill(0, 0, 0);
-            
-            // Draw times in center
-            writeTimes(offscreen, details, small_font);
-
-            // Write scores on bottom left and bottom right
-            writeSmallScores(offscreen, details, medium_font);
-
-            // Draw the field
-            // drawField(offscreen, details);
-
+            // Load in images first to prevent slowdown after sending blank matrix to offscreen
             ImageVector firstImageVec, secondImageVec;
             Magick::Image firstImageMagick, secondImageMagick;
             bool usedVec = false;
@@ -646,6 +636,19 @@ void writeLargeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
                     secondImageMagick = InvertNonTransparentPixels(secondImageMagick);
                 }
             }
+
+            offscreen->Fill(0, 0, 0);
+            
+            // Draw times in center
+            writeTimes(offscreen, details, small_font);
+
+            // Write scores on bottom left and bottom right
+            writeSmallScores(offscreen, details, medium_font);
+
+            // Draw the field
+            // drawField(offscreen, details);
+
+            
 
             if (usedVec) {
                 if (firstImageVec.size() > 0 && secondImageVec.size() > 0) {

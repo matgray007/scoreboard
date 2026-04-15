@@ -69,7 +69,8 @@ The matrix backend script allows for some additional constraints within the abov
 
 In addition to the matrix frontend and backend, a simple React web app with Fast API backend was created for configuration management and general Raspberry Pi control. This was created to eliminate the need to ssh into the Pi for general matrix use.
 
-[#TODO: Add picture of the webpage]
+- Image of the webpage:
+![Webpage](images/webpage.png)
 
 ### Video Demo
 
@@ -167,26 +168,24 @@ Please view [these wiring guidelines](matrix/wiring.md) for wiring concerns not 
 
 Pictured above is the wiring setup used for the creation of this application. 
 
-[#TODO: Expand on this]
+The left power supply is plugged into the Matrix bonnet and the power supply on the bottom is plugged into the Pi. The matrix connects to the bonnet's screw terminals. There is an extra end to this cord in case one Pi is being used to power two boards. The data ribbon also connects directly into the bonnet. 
 
 ### Software Setup
 
-This system has been tested on [#TODO: Add the linux version]. It should be Linux-agnostic, however it has not been tested on other versions. Python 3.[#TODO: add python version] and pip 3.[#TODO: add pip version]. 
+This system has been tested on Debian GNU/Linux 12. It should be Linux-agnostic, however it has not been tested on other versions. Python 3.11.2 and pip 23.0.1. 
 
 Cloning and compiling of the Zeller matrix API:
 
-`git submodule update --init --recusive`  
+`git submodule update --init --recursive`  
 `cd matrix`  
 `make -C lib`  
 
 #### Dependencies
-Dependencies can be viewed in [this file](.dependencies).
-
-[#TODO: finish the dependencies for the website too]
+Dependencies for running the matrix can be viewed in [this file](.dependencies). Additional dependencies required for use of the Zeller API can be found in [this file](matrix/utils/README.md).
 
 ### Running the Matrix
 
-Once the necessary dependencies have been installed and both repos have been cloned (this one and Zeller's rpi-rgb-led-matrix library), I would recommend running one of Zeller's demos as a sanity check. These demos can be viewed [here](matrix/examples-api-use/README.md). The matrix frontend code can be compiled by running `make frontend/sendScores.cc` [#TODO: Double check that this works or maybe we need to navigate to there]. Once it has finished compiling, the executable can be run with a variety of flags. A majority of these flags are hardware-specific, so vary as needed.
+Once the necessary dependencies have been installed and both repositories have been cloned (this one and Zeller's rpi-rgb-led-matrix library), I would recommend running one of Zeller's demos as a sanity check. These demos can be viewed [here](matrix/examples-api-use/README.md). The matrix frontend code can be compiled by running `cd frontend && make`. Once it has finished compiling, the executable can be run with a variety of flags. A majority of these flags are hardware-specific, so vary as needed.
 
 
 | Flag | Meaning | Values Used with Above Hardware |
@@ -208,39 +207,45 @@ The first time running the backend with spotify, you will need to authenticate y
 
 ### Running the website
 
-[#TODO: Need to do this section]
+Once packages have been installed, the frontend can be run with `cd webpage-frontend && npm start`. In a new terminal, the backend can be run with `cd webpage-backend && fastapi dev main.py --host 0.0.0.0`.
 
 ## Configuration
 
  ### Matrix Frontend
 
- The matrix frontend utilizes multiple method for controlling the configuration. The mode.json and config.json files are initially read to retrieve the mode it is to run in and then any additional configurations, respectively. However, while running the matrix frontend from the command line, any flags passed in will override what the executable reads from the files. The various modes are outlined here:
+ The matrix frontend utilizes multiple methods to control the configuration. The mode.json and config.json files are initially read to retrieve the mode it is to run in and then any additional configurations, respectively. However, while running the matrix frontend from the command line, any flags passed in will override what the executable reads from the files. The various modes are outlined here:
 
 
 
- | Flag | Meaning | Values Used with Above Hardware |
+ | Flag | Value | Description |
 | -------- | -------- | -------- |
+| -d | scoreboard | Basic scoreboard display. Retrieves the live games and cycles through them one at a time displaying the current score and time. |
+| -d | logos | The same functionality as scoreboard mode except the team logos are displayed instead of the abbreviations. |
+| -d | large-logos | The same functionality as logos except the logos take up a majority of the screen real estate. |
+| -d | spotify | Queries the connected Spotify account and displays the live song, artist, and album cover. |
+| -d | clock | Displays the Pi's current time with an ambient background. |
+| -o | N/A | Only display the scores of the game containing the favorite team listed in the config. Only valid in a sports-based mode. |
 
-[#TODO: Make this a nice table]
-- (scoreboard) No Logos: Traditional scoreboard with text team names
-- (logos) Small Logos: Built upon the No Logos but with team logos replacing the textual names
-- (large-logos) Large Logos: Team logos take up a majority of the screen but are unobtrusive to game information
 
 ## Learnings
 
+- Hardware-Software integration is non-trivial and ultimately requires the software to be designed to fit within the hardware limitations. 
+
+- Real-time systems require trade offs. Specifically, the latency and rate-limiting fight one another for importance, so this trade off must be chosen consciously. 
+
+- Data transformation was ultimately the most tedious and most difficult aspect. The data is fetched as a JSON, but then forming this object into a display that is not only informational, but also aesthetic, is very challenging
+
 ## Future Improvements
 
-This project has infinite possible depth and breadth. I hope to explore both of these directions as much as possible. The changes and additions most likely to occur next are improvements to what already exist before expanding in new directions. Here is a nowhere near comprehensive list of improvements:
+This project has infinite possible depth and breadth. I hope to explore both of these directions as much as possible. The changes and additions most likely to occur next are improvements to what already exist before expanding in new directions. Here is a far from comprehensive list of improvements:
 
-- Restructure/rename folders
-    - the Zeller repo should be in a better named folder
 - Webpage styling
 - Ability to toggle favorite only on the webpage
 - "No songs being played currently"
 - "No games today/currently"
     - I believe this exists, but it is being cut off currently.
-- Togglable icon-from-url functionality 
-    - Currently, the matrix frontend tries to retrieve the icon from the logos directory. If the logo is not present, then it fetches the logo from the url present in the API response.
+- Toggleable icon-from-URL functionality 
+    - Currently, the matrix frontend tries to retrieve the icon from the logos directory. If the logo is not present, then it fetches the logo from the URL present in the API response.
 - Sports news
     - Scrolls the news across the board and displays the associated team's logo
 - Favorite team-animations
@@ -249,15 +254,7 @@ This project has infinite possible depth and breadth. I hope to explore both of 
 - NFL position on field
     - A thin line 10/12 pixels long that is white(?) up to where the team with the ball currently is
     - Maybe turns red while in the redzone?
-
-
-
--Make webpage look nice
--"No games today/currently"
--liveonly toggle on webpage
 -"No songs being played currently"
--Shutdown pi api
--Make all sports use the url in the response instead of getting the logo from the repo. Leave original functionality as an option
 
 ## Images
 
@@ -276,5 +273,5 @@ This project has infinite possible depth and breadth. I hope to explore both of 
 - Spotify mode showing the album cover, song name, and artist name of the currently playing song:
 ![Spotify](images/spotify.jpeg)
 
-- Close mode displaying the current time with ambient, blue lines racing across the backgroung:
+- Clock mode displaying the current time with ambient, blue lines racing across the background:
 ![Clock](images/clock.jpeg)
