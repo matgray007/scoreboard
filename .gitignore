@@ -6,3 +6,5 @@ secrets.json
 spotify_token.json
 mode.json
 config.json
+
+*/__pycache__/
