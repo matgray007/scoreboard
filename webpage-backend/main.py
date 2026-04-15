@@ -76,6 +76,8 @@ def update_status(body: StatusUpdate  = Body(...)):
     else:
         status = "stop"
     scores_result = subprocess.run(['sudo', 'systemctl', status, 'get-scores.service'])
+    if (status == "start"):
+        time.sleep(0.5) # Half a second delay added to ensure scores are retrieved prior to writing to the matrix
     matrix_result = subprocess.run(['sudo', 'systemctl', status, 'write-matrix.service'])
     return {
         "message": "Attempted to update the service statuses",
