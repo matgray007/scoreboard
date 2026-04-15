@@ -1,8 +1,0 @@
--Start/stop button on webpage (hook up to bash scripts [or replace with apis])
--Make webpage look nice
--"No games today/currently"
--liveonly toggle on webpage
--"No songs being played currently"
--Shutdown pi api
--Make all sports use the url in the response instead of getting the logo from the repo. Leave original functionality as an option
-

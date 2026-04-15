@@ -44,10 +44,17 @@ class ConfigUpdate(BaseModel):
     league: str
 
 
+'''
+Test API to ensure backend is working
+'''
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
 
+
+'''
+Retrieves the status of the matrix's frontend and backend services
+'''
 @app.get("/status")
 def get_status():
     scores_result = subprocess.run(['sudo', 'systemctl', 'status', 'get-scores.service'])
@@ -57,6 +64,10 @@ def get_status():
         "scores": scores_result.returncode,
         "matrix": matrix_result.returncode
     }
+
+'''
+Updates the status of the matrix's frontend and backend services
+'''
 
 @app.patch("/status")
 def update_status(body: StatusUpdate  = Body(...)):
@@ -85,12 +96,18 @@ def rasp_pi_status(body: PiAction = Body(...)):
         action_result = subprocess.run(['sudo', 'shutdown', '-h', 'now'])
 
 
+'''
+Retrieves the mode that the matrix's services are currently running in
+'''
 @app.get("/mode")
 def get_mode():
     with open(MODE_FILE, 'r') as f:
         data_dict = json.load(f)
     return data_dict
 
+'''
+Updates the mode that the matrix's services are currently running in
+'''
 @app.patch("/mode")
 def update_mode(body: ModeUpdate = Body(...)):
     with open(MODE_FILE, 'w') as f:
@@ -111,13 +128,21 @@ def update_mode(body: ModeUpdate = Body(...)):
 
 
     return {"message": "Config updated successfully"} # TODO: return some of the results in this json to handle on the frontend
-    
+
+
+'''
+Retrieves the config that the matrix's services are currently running on
+'''
 @app.get("/config")
 def get_config():
     with open(CONFIG_FILE, 'r') as f:
         config_dict = json.load(f)
     return config_dict
 
+
+'''
+Updates the config that the matrix's services are currently running on
+'''
 @app.patch("/config")
 def update_config(body: ConfigUpdate = Body(...)):
     print("Here we are in the update_config", flush=True)

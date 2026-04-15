@@ -1,0 +1,2 @@
+
+This directory contains example responses that can be copied and pasted into currentScores.json in lieu of running the backend. It is meant to be used if there are not live games and to view the logos/display of each team in the respective leagues.

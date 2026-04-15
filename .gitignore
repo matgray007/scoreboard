@@ -1,6 +1,6 @@
 currentScores.json
-writeToMatrix/sendScores.exe
-writeToMatrix/sendScores.o
+frontend/sendScores.exe
+frontend/sendScores.o
 .venv
 secrets.json
 spotify_token.json
