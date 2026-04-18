@@ -899,6 +899,8 @@ int main(int argc, char *argv[]) {
         } else if (mode == "large-logos") {
             Magick::InitializeMagick(*argv);
             writeLargeLogos(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
+        } else if (mode == "news") {
+            // News implementation  
         } else if (mode == "spotify") {
             Magick::InitializeMagick(*argv);
             writeSpotify(matrix, offscreen, config, large_font, medium_font, small_font);

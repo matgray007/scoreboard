@@ -70,6 +70,7 @@ The matrix backend script allows for some additional constraints within the abov
 In addition to the matrix frontend and backend, a simple React web app with Fast API backend was created for configuration management and general Raspberry Pi control. This was created to eliminate the need to ssh into the Pi for general matrix use.
 
 - Image of the webpage:
+
 ![Webpage](images/webpage.png)
 
 ### Video Demo
@@ -120,20 +121,25 @@ The Raspberry Pi is capable of powering the matrix under light load on its own, 
 
 ```mermaid
 flowchart TD 
-    subgraph Control_Plane
-    UI[React Web App]
-    API[FastAPI Backend] 
+    subgraph Control_Plane["Control Plane"]
+        UI[React Web App]
+        API[FastAPI Backend] 
     end 
-    subgraph Raspberry_Pi
-    PY[Python Data Fetcher]
-    JSON[currentScores.json]
-    CPP[C++ Display Renderer]
+
+    subgraph Raspberry_Pi["Raspberry Pi"]
+        PY[Python Data Fetcher]
+        JSON[currentScores.json]
+        CPP[C++ Display Renderer]
     end
+
     EXT[External API]
     LED[LED Matrix]
+
     UI <--> API
-    API <-->|bash commands / config updates| Raspberry_Pi
-    API -->|SIGHUP / restart| Raspberry_Pi
+
+    API <-->|bash commands / config updates| PY
+    API -->|SIGHUP / restart| CPP
+
     PY -->|fetch data| EXT
     PY -->|write| JSON
     CPP -->|read| JSON
