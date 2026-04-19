@@ -246,10 +246,7 @@ Once packages have been installed, the frontend can be run with `cd webpage-fron
 This project has infinite possible depth and breadth. I hope to explore both of these directions as much as possible. The changes and additions most likely to occur next are improvements to what already exist before expanding in new directions. Here is a far from comprehensive list of improvements:
 
 - Webpage styling
-- Ability to toggle favorite only on the webpage
 - "No songs being played currently"
-- "No games today/currently"
-    - I believe this exists, but it is being cut off currently.
 - Toggleable icon-from-URL functionality 
     - Currently, the matrix frontend tries to retrieve the icon from the logos directory. If the logo is not present, then it fetches the logo from the URL present in the API response.
 - Sports news
@@ -260,7 +257,8 @@ This project has infinite possible depth and breadth. I hope to explore both of 
 - NFL position on field
     - A thin line 10/12 pixels long that is white(?) up to where the team with the ball currently is
     - Maybe turns red while in the redzone?
--"No songs being played currently"
+- Partial Fill() funciton to fill (clear) only part of the screen.
+    - So we don't have to draw the image to the matrix every loop and can just redraw the stuff that is changing
 
 ## Images
 

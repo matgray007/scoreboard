@@ -24,7 +24,7 @@ export default function ConfigSelector({ mode }) {
   };
   fetchConfig();
   }, []);
-  if (mode == "large-logos" || mode == "logos" || mode == "scoreboard") {
+  if (mode == "large-logos" || mode == "logos" || mode == "scoreboard" || mode == "news") {
     
 
     const leagues = [

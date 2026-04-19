@@ -10,6 +10,7 @@ export default function ModeSelector({ onModeChange }) {
     {label: "Scoreboard", value: "scoreboard"},
     {label: "Logos", value: "logos"},
     {label: "Large Logos", value: "large-logos"},
+    {label: "Sports News", value: "news"},
     {label: "Spotify", value: "spotify"},
     {label: "Clock", value: "clock"}
   ];

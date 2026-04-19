@@ -668,6 +668,77 @@ void writeLargeLogos(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value conf
     }
 }
 
+void writeTime(RGBMatrix *matrix, FrameCanvas *offscreen, rgb_matrix::Font &font, 
+                 int x_offset, int y_offset) {
+    time_t now = time(0);
+    struct tm *localtm = localtime(&now);
+    char buffer[6];
+    strftime(buffer, sizeof(buffer), "%H:%M", localtm);
+    std::string time_str(buffer);
+    rgb_matrix::DrawText(offscreen, font,
+                x_offset, y_offset + font.baseline(),
+                Color(255, 255, 255), NULL, time_str.c_str(),
+                0); 
+}
+
+void writeNews(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, 
+                 rgb_matrix::Font &text_font, rgb_matrix::Font &clock_font) {
+    int scrolling_speed = 5; // Adjust this value to increase/decrease scrolling speed (letters per second)
+    int delay_speed_usec = 1000000 / scrolling_speed / text_font.CharacterWidth('W');
+    int width = offscreen->width();
+    int height = offscreen->height();
+    Json::Value overallConfig = readConfig();
+    while (!interrupt_received && !sighup_received) {
+        // Read in currentScores.json
+        Json::Value current_news = readScores();
+        // Loop through each news item in current_news
+        for (const auto& news_item : current_news["news"]) {
+            if (interrupt_received || sighup_received) {
+                break;
+            }
+
+            // If a team is present, retrieve the image and scale it
+            bool team_present = false;
+            ImageVector firstImageVec, secondImageVec;
+            if (news_item.isMember("team") && news_item["team"].size() > 0) {
+                std::string short_team_name = config[news_item["team"][0].asString()]["shortName"].asString();
+                Magick::Image firstImageMagick, secondImageMagick;
+                std::string firstLogo = retrieveLogoPath(short_team_name, overallConfig);
+                firstImageVec = LoadImageAndScaleImage(firstLogo.c_str(), 2 * height / 3, 2 * height / 3);
+                team_present = true;
+            }
+
+            
+
+            int x = width;
+            int news_item_length = 0;
+
+            // Per news item loop that scrolls the text
+            while (!interrupt_received && !sighup_received && (--x + news_item_length >= (0))) {
+                offscreen->Fill(0, 0, 0);
+
+                news_item_length = rgb_matrix::DrawText(offscreen, text_font,
+                           x, 1 + text_font.baseline(),
+                           Color(255, 255, 255), NULL, news_item["headline"].asString().c_str(),
+                           0);
+
+                if (team_present) {
+                    CopyImageToCanvas(firstImageVec[0], offscreen, 1, height / 3);
+                }
+                writeTime(matrix, offscreen, clock_font, width / 3 + 1, height / 2);
+                offscreen = matrix->SwapOnVSync(offscreen);
+                usleep(delay_speed_usec);
+
+                if (interrupt_received || sighup_received) break;
+            }
+            
+
+
+            
+        }
+    }
+}
+
 // Animation for when a team scores a field goald
 void writeFieldGoal(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config) {
     offscreen->Fill(0, 0, 0);
@@ -790,15 +861,7 @@ void writeClock(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, r
                 }
             }
         }
-        time_t now = time(0);
-        struct tm *localtm = localtime(&now);
-        char buffer[6];
-        strftime(buffer, sizeof(buffer), "%H:%M", localtm);
-        std::string time_str(buffer);
-        rgb_matrix::DrawText(offscreen, large_font,
-                    width / 3, height / 2 + large_font.baseline(),
-                    Color(255, 255, 255), NULL, time_str.c_str(),
-                    0); 
+        writeTime(matrix, offscreen, large_font, width / 3 + 1, height / 2);
         offscreen = matrix->SwapOnVSync(offscreen);
         usleep(100000); // Update every 100 ms. This makes the streaks travel faster/slower (once per iteration)
     }
@@ -900,6 +963,8 @@ int main(int argc, char *argv[]) {
             Magick::InitializeMagick(*argv);
             writeLargeLogos(matrix, offscreen, config, large_font, medium_font, small_font, favorite_only);
         } else if (mode == "news") {
+            Magick::InitializeMagick(*argv);
+            writeNews(matrix, offscreen, config, medium_font, large_font);
             // News implementation  
         } else if (mode == "spotify") {
             Magick::InitializeMagick(*argv);

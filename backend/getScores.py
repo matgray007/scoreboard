@@ -3,6 +3,8 @@ import time
 from json import dumps
 import json
 import os
+import argparse
+
 import spotifyHelpers as spotifyHelpers
 
 
@@ -57,14 +59,16 @@ def getScores(liveOnly, sport):
 
 def getNews(sport):
     if (sport == 'nba'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news')
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news?limit=100')
     elif (sport == 'nfl'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news')
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=100')
     else:
         response = {}
     json = {'news': []}
     news = []
     for article in response.json()['articles']:
+        if (article["type"] in ["Media", "Story"]):
+            continue
         team = []
         temp = (category for category in article['categories'] if category['type'] == 'team')
         for team_temp in temp:
@@ -73,7 +77,7 @@ def getNews(sport):
     # There can be multiple teams, so just the first team is taken for simplicity. This can be changed to a list of teams if needed
     # The teams can include college teams, which are not includes in the team_config, so they will need to be filtered on the c++ side
     json['news'] = news
-    return news
+    return json
 
 
 '''
@@ -91,15 +95,25 @@ def getSong(access_token):
 
 
 
-def main():
-    mode_file_path = os.path.join(os.path.dirname(__file__), MODE_FILE)
-    with open(mode_file_path, 'r') as mode_file:
-        mode_config = json.load(mode_file)
+def main(mode_arg = "", league_arg = ""):
+    if (len(mode_arg) == 0):
+        mode_file_path = os.path.join(os.path.dirname(__file__), MODE_FILE)
+        with open(mode_file_path, 'r') as mode_file:
+            mode_config = json.load(mode_file)
+        mode = mode_config["mode"]
+    else:
+        mode = mode_arg
+        
     config_file_path = os.path.join(os.path.dirname(__file__), CONFIG_FILE)
     with open(config_file_path, 'r') as config_file:
         config = json.load(config_file)
+    league = config["league"]
+    
+    if (len(league_arg) > 0):
+        league = league_arg
 
-    mode = mode_config["mode"]
+
+    
     # Setup
     sleep_time = 20
 
@@ -116,13 +130,17 @@ def main():
             curr = getSong(access_token)
             
         elif mode == "scoreboard" or mode == "logos" or mode == "large-logos" :
-            curr = getScores(config["liveOnly"], config["league"])
+            curr = getScores(config["liveOnly"], league)
         elif mode == "news":
-            curr = getNews(config["league"])
+            curr = getNews(league)
         with open(CURRENT_SCORES_FILE, 'w') as file:
                 file.write(dumps(curr))
 
         time.sleep(sleep_time)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Retrieve information from various external APIs")
+    parser.add_argument("-m", "--mode", default="", help="Mode for the backend to run in. Overrides what is present in mode.json")
+    parser.add_argument("-l", "--league", default="", help="Sport for the backend to fetch. Overrides what is present in config.json")
+    args = parser.parse_args()
+    main(args.mode, args.league)

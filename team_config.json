@@ -125,7 +125,21 @@
             "secondary": [255, 194, 14]
         }
     },
+    "LA Chargers": {
+        "shortName": "LAC",
+        "colors": {
+            "primary": [0, 128, 198],
+            "secondary": [255, 194, 14]
+        }
+    },
     "Los Angeles Rams": {
+        "shortName": "LAR",
+        "colors": {
+            "primary": [0, 53, 148],
+            "secondary": [255, 163, 0]
+        }
+    },
+    "LA Rams": {
         "shortName": "LAR",
         "colors": {
             "primary": [0, 53, 148],
@@ -314,7 +328,21 @@
             "secondary": [29, 66, 148]
         }
     },
+    "LA Clippers": {
+        "shortName": "LAC",
+        "colors": {
+            "primary": [200, 16, 46],
+            "secondary": [29, 66, 148]
+        }
+    },
     "Los Angeles Lakers": {
+        "shortName": "LAL",
+        "colors": {
+            "primary": [85, 37, 130],
+            "secondary": [253, 185, 39]
+        }
+    },
+    "LA Lakers": {
         "shortName": "LAL",
         "colors": {
             "primary": [85, 37, 130],
