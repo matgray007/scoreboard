@@ -11,6 +11,7 @@ export default function ModeSelector({ onModeChange }) {
     {label: "Logos", value: "logos"},
     {label: "Large Logos", value: "large-logos"},
     {label: "Sports News", value: "news"},
+    {label: "Breaking News", value: "breaking-news"},
     {label: "Spotify", value: "spotify"},
     {label: "Clock", value: "clock"}
   ];

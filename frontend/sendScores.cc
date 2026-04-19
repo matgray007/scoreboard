@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <atomic>
 #include <sys/stat.h>
+#include <utility>
 
 using namespace rgb_matrix;
 // CONSTANTS
@@ -681,6 +682,49 @@ void writeTime(RGBMatrix *matrix, FrameCanvas *offscreen, rgb_matrix::Font &font
                 0); 
 }
 
+void displayNews(RGBMatrix *matrix, FrameCanvas *offscreen, rgb_matrix::Font &text_font,
+                 rgb_matrix::Font &clock_font, const Json::Value& news_item, Json::Value overallConfig,
+                 Json::Value config, int width, int height, int delay_speed_usec) {
+    if (interrupt_received || sighup_received) {
+        return;
+    }
+
+    // If a team is present, retrieve the image and scale it
+    bool team_present = false;
+    ImageVector firstImageVec, secondImageVec;
+    if (news_item.isMember("team") && news_item["team"].size() > 0) {
+        std::string short_team_name = config[news_item["team"][0].asString()]["shortName"].asString();
+        Magick::Image firstImageMagick, secondImageMagick;
+        std::string firstLogo = retrieveLogoPath(short_team_name, overallConfig);
+        firstImageVec = LoadImageAndScaleImage(firstLogo.c_str(), 2 * height / 3, 2 * height / 3);
+        team_present = true;
+    }
+
+    
+
+    int x = width;
+    int news_item_length = 0;
+
+    // Per news item loop that scrolls the text
+    while (!interrupt_received && !sighup_received && (--x + news_item_length >= (0))) {
+        offscreen->Fill(0, 0, 0);
+
+        news_item_length = rgb_matrix::DrawText(offscreen, text_font,
+                    x, 1 + text_font.baseline(),
+                    Color(255, 255, 255), NULL, news_item["headline"].asString().c_str(),
+                    0);
+
+        if (team_present) {
+            CopyImageToCanvas(firstImageVec[0], offscreen, 1, height / 3);
+        }
+        writeTime(matrix, offscreen, clock_font, width / 3 + 1, height / 2);
+        offscreen = matrix->SwapOnVSync(offscreen);
+        usleep(delay_speed_usec);
+
+        if (interrupt_received || sighup_received) break;
+    }
+}
+
 void writeNews(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, 
                  rgb_matrix::Font &text_font, rgb_matrix::Font &clock_font) {
     int scrolling_speed = 5; // Adjust this value to increase/decrease scrolling speed (letters per second)
@@ -696,45 +740,7 @@ void writeNews(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
             if (interrupt_received || sighup_received) {
                 break;
             }
-
-            // If a team is present, retrieve the image and scale it
-            bool team_present = false;
-            ImageVector firstImageVec, secondImageVec;
-            if (news_item.isMember("team") && news_item["team"].size() > 0) {
-                std::string short_team_name = config[news_item["team"][0].asString()]["shortName"].asString();
-                Magick::Image firstImageMagick, secondImageMagick;
-                std::string firstLogo = retrieveLogoPath(short_team_name, overallConfig);
-                firstImageVec = LoadImageAndScaleImage(firstLogo.c_str(), 2 * height / 3, 2 * height / 3);
-                team_present = true;
-            }
-
-            
-
-            int x = width;
-            int news_item_length = 0;
-
-            // Per news item loop that scrolls the text
-            while (!interrupt_received && !sighup_received && (--x + news_item_length >= (0))) {
-                offscreen->Fill(0, 0, 0);
-
-                news_item_length = rgb_matrix::DrawText(offscreen, text_font,
-                           x, 1 + text_font.baseline(),
-                           Color(255, 255, 255), NULL, news_item["headline"].asString().c_str(),
-                           0);
-
-                if (team_present) {
-                    CopyImageToCanvas(firstImageVec[0], offscreen, 1, height / 3);
-                }
-                writeTime(matrix, offscreen, clock_font, width / 3 + 1, height / 2);
-                offscreen = matrix->SwapOnVSync(offscreen);
-                usleep(delay_speed_usec);
-
-                if (interrupt_received || sighup_received) break;
-            }
-            
-
-
-            
+            displayNews(matrix, offscreen, text_font, clock_font, news_item, overallConfig, config, width, height, delay_speed_usec);
         }
     }
 }
@@ -826,45 +832,129 @@ void updateClockBackgroundValues(int** values, int** newValues, int width, int h
     // accidentally aliasing the two buffers.
 }
 
-void writeClock(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, rgb_matrix::Font &large_font) {
+void writeClockInfo(RGBMatrix *matrix, FrameCanvas *offscreen, int width_, int height_,
+                 int**& values_, int**& newValues_, rgb_matrix::Font &large_font) {
+    offscreen->Fill(0, 0, 0);
+    // Update into the secondary buffer, then swap pointers so we always
+    // read from `values_` and write into `newValues_` the next frame.
+    updateClockBackgroundValues(values_, newValues_, width_, height_);
+    int** tmp = values_;
+    values_ = newValues_;
+    newValues_ = tmp;
+    for (int x = 0; x < width_; ++x) {
+        for (int y = 0; y < height_; ++y) {
+            if (values_[x][y] == 3) {
+                offscreen->SetPixel(x, y, 0, 200, 200);
+            } else if (values_[x][y] == 2) {
+                offscreen->SetPixel(x, y, 0, 100, 100);
+            } else if (values_[x][y] == 1) {
+                offscreen->SetPixel(x, y, 0, 50, 50);
+            }
+        }
+    }
+    writeTime(matrix, offscreen, large_font, width / 3 + 1, height / 2);
+    offscreen = matrix->SwapOnVSync(offscreen);
+}
+
+void writeClock(RGBMatrix *matrix, FrameCanvas *offscreen, rgb_matrix::Font &large_font) {
 
     int width_ = offscreen->width();
     int height_ = offscreen->height();
 
-        // Allocate memory (zero-initialize)
-        int** values_ = new int*[width_];
-        for (int x = 0; x < width_; ++x) {
-            values_[x] = new int[height_]();
-        }
-        int** newValues_ = new int*[width_];
-        for (int x = 0; x < width_; ++x) {
-            newValues_[x] = new int[height_]();
-        }
+    // Allocate memory (zero-initialize)
+    int** values_ = new int*[width_];
+    for (int x = 0; x < width_; ++x) {
+        values_[x] = new int[height_]();
+    }
+    int** newValues_ = new int*[width_];
+    for (int x = 0; x < width_; ++x) {
+        newValues_[x] = new int[height_]();
+    }
     // Main loop
     while (!interrupt_received && !sighup_received) {
-        offscreen->Fill(0, 0, 0);
-        // Update into the secondary buffer, then swap pointers so we always
-        // read from `values_` and write into `newValues_` the next frame.
-        updateClockBackgroundValues(values_, newValues_, width_, height_);
-        int** tmp = values_;
-        values_ = newValues_;
-        newValues_ = tmp;
-        // TODO: Instead of hardcoding the colors, have it slowly fade from one to another
-        for (int x = 0; x < width_; ++x) {
-            for (int y = 0; y < height_; ++y) {
-                if (values_[x][y] == 3) {
-                    offscreen->SetPixel(x, y, 0, 200, 200);
-                } else if (values_[x][y] == 2) {
-                    offscreen->SetPixel(x, y, 0, 100, 100);
-                } else if (values_[x][y] == 1) {
-                    offscreen->SetPixel(x, y, 0, 50, 50);
-                }
-            }
-        }
-        writeTime(matrix, offscreen, large_font, width / 3 + 1, height / 2);
-        offscreen = matrix->SwapOnVSync(offscreen);
+        writeClockInfo(matrix, offscreen, width_, height_, values_, newValues_, large_font);
         usleep(100000); // Update every 100 ms. This makes the streaks travel faster/slower (once per iteration)
     }
+    // Clean up memory
+    for (int x = 0; x < width_; ++x) {
+        delete[] values_[x];
+        delete[] newValues_[x];
+    }
+    delete[] values_;
+    delete[] newValues_;
+}
+
+void breakingNewsAnimation(RGBMatrix *matrix, FrameCanvas *offscreen, 
+                 rgb_matrix::Font &text_font, rgb_matrix::Font &clock_font, 
+                 int height, int width, int delay_speed_usec) {
+    
+
+    int x = width;
+    int breaking_news_length = 0;
+    std::string breaking_news_text = "BREAKING NEWS!  BREAKING NEWS!";
+
+    // Per news item loop that scrolls the text
+    while (!interrupt_received && !sighup_received && (--x + breaking_news_length >= (0))) {
+        offscreen->Fill(0, 0, 0);
+        int i = 0;
+        while (i < 13 + 2) { // The 8 is the character height. There is no characterHeight function...
+            rgb_matrix::DrawLine(offscreen, 0, i, width, i, Color(255, 0, 0));
+            i += 1;
+        }
+
+        breaking_news_length = rgb_matrix::DrawText(offscreen, clock_font,
+                    x, 1 + clock_font.baseline(),
+                    Color(255, 255, 255), NULL, breaking_news_text.c_str(),
+                    0);
+        writeTime(matrix, offscreen, clock_font, width / 3 + 1, height / 2);
+        offscreen = matrix->SwapOnVSync(offscreen);
+        usleep(delay_speed_usec);
+
+        if (interrupt_received || sighup_received) break;
+    }
+    
+    }
+
+void watchNewsAndWriteClock(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, 
+                 rgb_matrix::Font &text_font, rgb_matrix::Font &clock_font) {
+    
+    int width_ = offscreen->width();
+    int height_ = offscreen->height();
+
+    // Allocate memory (zero-initialize)
+    int** values_ = new int*[width_];
+    for (int x = 0; x < width_; ++x) {
+        values_[x] = new int[height_]();
+    }
+    int** newValues_ = new int*[width_];
+    for (int x = 0; x < width_; ++x) {
+        newValues_[x] = new int[height_]();
+    }
+    // Main loop
+    while (!interrupt_received && !sighup_received) {
+        Json::Value current_news = readScores();
+        if (current_news.isMember("news") && current_news["news"].size() > 0) {
+            const Json::Value& news_item = current_news["news"][0];
+            Json::Value overallConfig = readConfig();
+            int scrolling_speed = 5; // Adjust this value to increase/decrease scrolling speed (letters per second)
+            int delay_speed_usec = 1000000 / scrolling_speed / text_font.CharacterWidth('W');
+            breakingNewsAnimation(matrix, offscreen, text_font, clock_font, height, width, delay_speed_usec);
+            // BREAKING NEWS
+            displayNews(matrix, offscreen, text_font, clock_font, news_item, overallConfig, config, width_, height_, delay_speed_usec);
+        }
+        offscreen->Fill(0, 0, 0);
+
+        writeClockInfo(matrix, offscreen, width_, height_, values_, newValues_, clock_font);
+        usleep(100000); // Update every 100 ms. This makes the streaks travel faster/slower (once per iteration)
+    
+    }
+    // Clean up memory
+    for (int x = 0; x < width_; ++x) {
+        delete[] values_[x];
+        delete[] newValues_[x];
+    }
+    delete[] values_;
+    delete[] newValues_;
 }
 
 
@@ -966,11 +1056,15 @@ int main(int argc, char *argv[]) {
             Magick::InitializeMagick(*argv);
             writeNews(matrix, offscreen, config, medium_font, large_font);
             // News implementation  
+        } 
+        else if (mode == "breaking-news") {
+            Magick::InitializeMagick(*argv);
+            watchNewsAndWriteClock(matrix, offscreen, config, medium_font, large_font);
         } else if (mode == "spotify") {
             Magick::InitializeMagick(*argv);
             writeSpotify(matrix, offscreen, config, large_font, medium_font, small_font);
         } else if (mode == "clock") {
-            writeClock(matrix, offscreen, config, large_font);
+            writeClock(matrix, offscreen, large_font);
         } else {
             std::cerr << "Invalid mode selected. Use 'scoreboard' or 'logos'." << std::endl;
             return 1;

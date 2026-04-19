@@ -67,8 +67,8 @@ def getNews(sport, limit):
     json = {'news': []}
     news = []
     for article in response.json()['articles']:
-        # if (article["type"] in ["Media", "Story"]): # TODO: Uncomment me
-        #     continue
+        if (article["type"] in ["Media", "Story"]):
+            continue
         team = []
         temp = (category for category in article['categories'] if category['type'] == 'team')
         for team_temp in temp:
@@ -119,6 +119,8 @@ def main(mode_arg = "", league_arg = ""):
         sleep_time = 3 # Refresh more often for spotify since the display cycles more quickly than scores
 
     last_news = {"news": []}
+    if mode == "breaking-news":
+        last_news = getNews(league, 1)
 
     # Main loop
     while True:
@@ -131,15 +133,11 @@ def main(mode_arg = "", league_arg = ""):
         elif mode == "news":
             curr = getNews(league, 100)
         elif mode == "breaking-news":
-            curr = getNews(league, 1)
+            curr = getNews("nba", 1)
             if (curr == last_news):
-                print(curr)
-                print("Not breaking news")
                 last_news = curr
                 curr = {"news": []}
             else:
-                print(curr)
-                print("Breaking news!")
                 last_news = curr
                 
         with open(CURRENT_SCORES_FILE, 'w') as file:
