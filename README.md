@@ -50,6 +50,7 @@ Images of the application running in the various different modes can be found in
 
 As of 4/5/2026, the matrix display modes include the following:
 - Scoreboard: Displays live and final sports scores from the current day.
+- News: Displays recent sports-related news.
 - Spotify Currently Playing: Displays the current song's album cover with scrolling song name and artist name(s)
 - Clock: Current time (based on Raspberry Pi's current time) with ambient background
 
@@ -228,6 +229,7 @@ Once packages have been installed, the frontend can be run with `cd webpage-fron
 | -d | scoreboard | Basic scoreboard display. Retrieves the live games and cycles through them one at a time displaying the current score and time. |
 | -d | logos | The same functionality as scoreboard mode except the team logos are displayed instead of the abbreviations. |
 | -d | large-logos | The same functionality as logos except the logos take up a majority of the screen real estate. |
+| -d | news | Scroll recent news across the screen and display corresponding logo and clock. |
 | -d | spotify | Queries the connected Spotify account and displays the live song, artist, and album cover. |
 | -d | clock | Displays the Pi's current time with an ambient background. |
 | -o | N/A | Only display the scores of the game containing the favorite team listed in the config. Only valid in a sports-based mode. |
@@ -249,8 +251,6 @@ This project has infinite possible depth and breadth. I hope to explore both of 
 - "No songs being played currently"
 - Toggleable icon-from-URL functionality 
     - Currently, the matrix frontend tries to retrieve the icon from the logos directory. If the logo is not present, then it fetches the logo from the URL present in the API response.
-- Sports news
-    - Scrolls the news across the board and displays the associated team's logo
 - Favorite team-animations
     - Namely touchdowns, field goals, sacks, etc.
     - Some example API responses for an NFL game are present in [this](ESPNResponses/) directory.
