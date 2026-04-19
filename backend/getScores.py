@@ -57,18 +57,18 @@ def getScores(liveOnly, sport):
 
 # TODO: Retain who has the ball, down and distance, and timeouts remaining
 
-def getNews(sport):
+def getNews(sport, limit):
     if (sport == 'nba'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news?limit=100')
+        response = requests.get(f'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news?limit={limit}')
     elif (sport == 'nfl'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=100')
+        response = requests.get(f'https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit={limit}')
     else:
         response = {}
     json = {'news': []}
     news = []
     for article in response.json()['articles']:
-        if (article["type"] in ["Media", "Story"]):
-            continue
+        # if (article["type"] in ["Media", "Story"]): # TODO: Uncomment me
+        #     continue
         team = []
         temp = (category for category in article['categories'] if category['type'] == 'team')
         for team_temp in temp:
@@ -78,7 +78,6 @@ def getNews(sport):
     # The teams can include college teams, which are not includes in the team_config, so they will need to be filtered on the c++ side
     json['news'] = news
     return json
-
 
 '''
 Gets the song currently playing on a user's Spotify account *requires setup of Spotify developer*
@@ -112,16 +111,14 @@ def main(mode_arg = "", league_arg = ""):
     if (len(league_arg) > 0):
         league = league_arg
 
-
-    
     # Setup
-    sleep_time = 20
+    sleep_time = 5
 
     if mode == "spotify":
         access_token = spotifyHelpers.authSetup()
-        sleep_time = 5 # Refresh more often for spotify since the display cycles more quickly than scores
+        sleep_time = 3 # Refresh more often for spotify since the display cycles more quickly than scores
 
-
+    last_news = {"news": []}
 
     # Main loop
     while True:
@@ -132,7 +129,19 @@ def main(mode_arg = "", league_arg = ""):
         elif mode == "scoreboard" or mode == "logos" or mode == "large-logos" :
             curr = getScores(config["liveOnly"], league)
         elif mode == "news":
-            curr = getNews(league)
+            curr = getNews(league, 100)
+        elif mode == "breaking-news":
+            curr = getNews(league, 1)
+            if (curr == last_news):
+                print(curr)
+                print("Not breaking news")
+                last_news = curr
+                curr = {"news": []}
+            else:
+                print(curr)
+                print("Breaking news!")
+                last_news = curr
+                
         with open(CURRENT_SCORES_FILE, 'w') as file:
                 file.write(dumps(curr))
 
