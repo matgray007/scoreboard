@@ -30,10 +30,11 @@ export default function ConfigSelector({ mode }) {
     const leagues = [
         { label: "NBA", value: "nba" },
         { label: "NFL", value: "nfl" },
-        { label: "NCAA Basketball", value: 'ncaab'}
-        // { label: "NHL", value: "nhl" },
-        // { label: "MLB", value: "mlb" },
-        // { label: "MLS", value: "mls" },
+        { label: "NHL", value: "nhl" },
+        { label: "MLB", value: "mlb" },
+        { label: "NCAA Basketball", value: 'ncaab' },
+        { label: "NCAA Football", value: 'ncaaf' },
+        // { label: "WNBA", value: "wnba" } // Something with the wnba is breaking things both frontend and backend...
     ];
 
     

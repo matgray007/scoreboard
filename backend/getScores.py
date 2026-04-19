@@ -23,10 +23,18 @@ def getScores(liveOnly, sport):
     print("getting scores...")
     if (sport == 'nba'):
         response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard')
+    elif (sport == 'wnba'):
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard')
     elif (sport == 'nfl'):
         response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard')
+    elif (sport == 'mlb'):
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard')
+    elif (sport == 'nhl'):
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard')
     elif (sport == 'ncaab'):
         response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard')
+    elif (sport == 'ncaaf'):
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard')    
     else:
         response = {}
     events = response.json()['events']
