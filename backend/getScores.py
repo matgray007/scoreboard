@@ -133,7 +133,7 @@ def main(mode_arg = "", league_arg = ""):
         elif mode == "news":
             curr = getNews(league, 100)
         elif mode == "breaking-news":
-            curr = getNews("nba", 1)
+            curr = getNews(league, 1)
             if (curr == last_news):
                 last_news = curr
                 curr = {"news": []}
