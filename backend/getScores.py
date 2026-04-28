@@ -47,7 +47,7 @@ def getScores(liveOnly, sport):
         # status- pre: prior to game started; in: game is live; post: game has ended
         for competition in game['competitions']:
             for competitor in competition['competitors']:
-                currObj['competitors'].append({'displayName': competitor['team']['displayName'], 'abbreviation': competitor['team']['abbreviation'], 'logo': competitor['team']['logo'], 'score': competitor['score'], 'homeAway': competitor['homeAway']})
+                currObj['competitors'].append({'displayName': competitor['team']['displayName'], 'abbreviation': competitor['team']['abbreviation'], 'logo': competitor['team']['logo'] if 'logo' in competitor['team'] else '', 'score': competitor['score'], 'homeAway': competitor['homeAway']})
         games.append(currObj)
     if liveOnly: # Only games that are currently in progress
         json['games'] = list(filter(lambda x: x['status'] == 'in', games))
