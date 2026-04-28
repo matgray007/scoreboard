@@ -24,9 +24,8 @@ export default function ConfigSelector({ mode }) {
   };
   fetchConfig();
   }, []);
-  if (mode == "large-logos" || mode == "logos" || mode == "scoreboard") {
-    
-
+  if (mode == "large-logos" || mode == "logos" || mode == "scoreboard" || 
+        mode == "news" || mode == "breaking-news") {
     const leagues = [
         { label: "NBA", value: "nba" },
         { label: "NFL", value: "nfl" },
