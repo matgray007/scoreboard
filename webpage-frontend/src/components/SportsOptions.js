@@ -31,8 +31,9 @@ export default function ConfigSelector({ mode }) {
         { label: "NFL", value: "nfl" },
         { label: "NHL", value: "nhl" },
         { label: "MLB", value: "mlb" },
-        { label: "NCAA Basketball", value: 'ncaab' },
-        { label: "NCAA Football", value: 'ncaaf' },
+        { label: "NCAA Basketball", value: "ncaab" },
+        { label: "NCAA Football", value: "ncaaf" },
+        { label: "Fifa", value: "fifa"}
         // { label: "WNBA", value: "wnba" } // Something with the wnba is breaking things both frontend and backend...
     ];
 
