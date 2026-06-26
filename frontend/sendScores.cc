@@ -694,10 +694,12 @@ void displayNews(RGBMatrix *matrix, FrameCanvas *offscreen, rgb_matrix::Font &te
     ImageVector firstImageVec, secondImageVec;
     if (news_item.isMember("team") && news_item["team"].size() > 0) {
         std::string short_team_name = config[news_item["team"][0].asString()]["shortName"].asString();
-        Magick::Image firstImageMagick, secondImageMagick;
-        std::string firstLogo = retrieveLogoPath(short_team_name, overallConfig);
-        firstImageVec = LoadImageAndScaleImage(firstLogo.c_str(), 2 * height / 3, 2 * height / 3);
-        team_present = true;
+        if (short_team_name != "") {
+            Magick::Image firstImageMagick, secondImageMagick;
+            std::string firstLogo = retrieveLogoPath(short_team_name, overallConfig);
+            firstImageVec = LoadImageAndScaleImage(firstLogo.c_str(), 2 * height / 3, 2 * height / 3);
+            team_present = true;
+        }
     }
 
     
