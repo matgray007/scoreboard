@@ -36,14 +36,16 @@ def getScores(liveOnly, sport):
     elif (sport == 'ncaab'):
         response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard')
     elif (sport == 'ncaaf'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard')    
+        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard')
+    elif (sport == 'fifa') :
+        response = requests.get('http://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard')
     else:
         response = {}
     events = response.json()['events']
     json = {'games': []}
     games = []
     for game in events:
-        currObj = {'shortName': game['shortName'], 'status': game['status']['type']['state'], 'period': game['status']['period'], 'displayClock': game['status']['displayClock'], 'date': game['date'], 'competitors': []}
+        currObj = {'shortName': game['shortName'], 'status': game['status']['type']['state'], 'period': game['status']['period'] if 'period' in game['status'] else '', 'displayClock': game['status']['displayClock'], 'date': game['date'], 'competitors': []}
         # status- pre: prior to game started; in: game is live; post: game has ended
         for competition in game['competitions']:
             for competitor in competition['competitors']:
