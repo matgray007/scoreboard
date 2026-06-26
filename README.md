@@ -230,6 +230,7 @@ Once packages have been installed, the frontend can be run with `cd webpage-fron
 | -d | logos | The same functionality as scoreboard mode except the team logos are displayed instead of the abbreviations. |
 | -d | large-logos | The same functionality as logos except the logos take up a majority of the screen real estate. |
 | -d | news | Scroll recent news across the screen and display corresponding logo and clock. |
+| -d | breaking-news | Runs the Clock mode but queries for news updates. Displays news when it comes in. |
 | -d | spotify | Queries the connected Spotify account and displays the live song, artist, and album cover. |
 | -d | clock | Displays the Pi's current time with an ambient background. |
 | -o | N/A | Only display the scores of the game containing the favorite team listed in the config. Only valid in a sports-based mode. |
