@@ -7,6 +7,8 @@ import argparse
 
 import spotifyHelpers as spotifyHelpers
 
+import sleeperHelpers as sleeperHelpers
+
 
 # CONSTANTS
 
@@ -96,6 +98,23 @@ def getSong(access_token):
 
 
 
+'''
+Gets the user's current matchup using a combination of espn apis and sleeper apis
+Inputs:
+
+'''
+def getSleeper(leagueID, week, sleeperObj):
+    currMatchup = sleeperHelpers.getMatchup(leagueID, week, sleeperObj[0]["rosterID"])
+    
+    for roster in currMatchup:
+        if (roster["rosterID"] == sleeperObj[0]["rosterID"]):
+            sleeperObj[0]["points"] = roster["points"]
+        elif (roster["rosterID"] == sleeperObj[1]["rosterID"]):
+            sleeperObj[1]["points"] = roster["points"]
+    return sleeperObj
+    
+
+
 def main(mode_arg = "", league_arg = ""):
     if (len(mode_arg) == 0):
         mode_file_path = os.path.join(os.path.dirname(__file__), MODE_FILE)
@@ -116,13 +135,27 @@ def main(mode_arg = "", league_arg = ""):
     # Setup
     sleep_time = 5
 
-    if mode == "spotify":
-        access_token = spotifyHelpers.authSetup()
-        sleep_time = 3 # Refresh more often for spotify since the display cycles more quickly than scores
-
     last_news = {"news": []}
+    sleeperObj = None
     if mode == "breaking-news":
         last_news = getNews(league, 1)
+    elif mode == "spotify":
+        access_token = spotifyHelpers.authSetup()
+        sleep_time = 3 # Refresh more often for spotify since the display cycles more quickly than scores
+    elif mode == "sleeper":
+        yearAndWeek = sleeperHelpers.getYearAndWeek()
+
+        sleeperObj = sleeperHelpers.setup(config["sleeperUserID"], yearAndWeek["year"], yearAndWeek["week"], config["leagueID"] if config.get("leagueID") else None, CONFIG_FILE)
+        if not sleeperObj:
+            raise Exception("There are no leagues that are currently in season")
+        if not config.get("sleeperLeague"):
+            with open(config_file_path, 'r') as config_file:
+                config = json.load(config_file)
+         
+        
+
+
+    
 
     # Main loop
     while True:
@@ -141,6 +174,10 @@ def main(mode_arg = "", league_arg = ""):
                 curr = {"news": []}
             else:
                 last_news = curr
+        elif mode == "sleeper":
+            curr = getSleeper(config["sleeperLeague"], yearAndWeek["week"], sleeperObj)
+        else:
+            raise Exception(f"The mode passed in was not a recognized mode: {mode}")
                 
         with open(CURRENT_SCORES_FILE, 'w') as file:
                 file.write(dumps(curr))

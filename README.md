@@ -263,6 +263,8 @@ This project has infinite possible depth and breadth. I hope to explore both of 
 - Separate sendScores.cc into multiple files
 - Add sleeper fantasy football
 - Mode and config files are combined into a "write during runtime" (league, live only, favorite only) and a "write once" (favorite team, sleeper username)
+- "Write once" settings get their own page on the website
+- Replace the "There are no leagues that are currently in season" exception with a display on screen that denotes there not being any in season leagues
 
 ## Images
 
