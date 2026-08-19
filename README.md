@@ -260,6 +260,7 @@ This project has infinite possible depth and breadth. I hope to explore both of 
     - Maybe turns red while in the redzone?
 - Partial Fill() funciton to fill (clear) only part of the screen.
     - So we don't have to draw the image to the matrix every loop and can just redraw the stuff that is changing
+- getScores.py request() calls should use passed in mode variables to create url rather than having all of them hardcoded
 
 ## Images
 

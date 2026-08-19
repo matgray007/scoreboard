@@ -1,5 +1,5 @@
 
-const API_BASE_URL = "http://10.0.0.6:8000"
+const API_BASE_URL = "http://mattspi:8000"
 
 export interface ModeResponse {
     mode: string;
