@@ -85,8 +85,7 @@ def aggregateInfo(matchup, rosters, myUser):
     oppUserID = oppRoster["userID"]
     oppUser = getUserInfo(oppUserID)
 
-
-    theirStuff = {"rosterID": matchup[1]["rosterID"], "username": oppUser["username"], "points": matchup[1]["points"], "avatar": f"{AVATAR_URL}/{oppUser["avatar"]}" if not None else "https://i.pravatar.cc/100"}
+    theirStuff = {"rosterID": matchup[1]["rosterID"], "username": oppUser["username"], "points": matchup[1]["points"], "avatar": f"{AVATAR_URL}/{oppUser['avatar']}" if not None else "https://i.pravatar.cc/100"}
 
     return [myStuff, theirStuff]
 

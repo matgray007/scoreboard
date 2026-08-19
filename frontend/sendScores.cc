@@ -17,6 +17,8 @@
 #include <atomic>
 #include <sys/stat.h>
 #include <utility>
+#include <iomanip>
+#include <sstream>
 
 using namespace rgb_matrix;
 // CONSTANTS
@@ -959,11 +961,25 @@ void watchNewsAndWriteClock(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Val
     delete[] newValues_;
 }
 
+std::string formatScore(double score)
+{
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(2) << score;
+
+    std::string result = ss.str();
+    result.erase(result.find_last_not_of('0') + 1);
+    if (!result.empty() && result.back() == '.')
+        result.pop_back();
+
+    return result;
+}
+
 void writeSleeper(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, 
                  rgb_matrix::Font &medium_font, rgb_matrix::Font &small_font) {
     int width_ = offscreen->width();
     int height_ = offscreen->height();
     Json::Value overallConfig = readConfig(); // This might not be needed
+    Color white = Color(255, 255, 255);
     while (!interrupt_received && !sighup_received) {
         // Read in currentScores.json
         Json::Value current_scores = readScores();
@@ -974,21 +990,39 @@ void writeSleeper(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
         offscreen->Fill(0, 0, 0);
 
         // Extract game details
-        GameDetails details = extractGameDetails(game, config);
+        std::string myUsername = current_scores["matchup"][0]["username"].asString();
+        double score = current_scores["matchup"][0]["points"].asDouble();
+        std::string myScore = formatScore(score);
+        std::string myAvatar = current_scores["matchup"][0]["avatar"].asString();
 
-        // Write scores on bottom left and bottom right
-        writeScores(offscreen, details, large_font);
+        std::string theirUsername = current_scores["matchup"][1]["username"].asString();
+        score = current_scores["matchup"][1]["points"].asDouble();
+        std::string theirScore = formatScore(score);
+        std::string theirAvatar = current_scores["matchup"][1]["avatar"].asString();
+
+        std::cout << "My score " << myScore << " their score " << theirScore << std::endl; 
+
+        // My score
+        rgb_matrix::DrawText(offscreen, medium_font,
+                    score1_x, score_y + medium_font.baseline(),
+                    white, NULL, myScore.c_str(),
+                    0);
+        // Their score
+        rgb_matrix::DrawText(offscreen, medium_font,
+                        score2_x + 6 - ((theirScore.length() - 2) * team_letter_width), score_y + medium_font.baseline(),
+                        white, NULL, theirScore.c_str(),
+                        0); // x value adjusted for right alignment
 
 
         ImageVector firstImageVec, secondImageVec;
         Magick::Image firstImageMagick, secondImageMagick;
 
-        firstImageMagick = load_image_from_url(details.firstTeamLogoURL);
+        firstImageMagick = load_image_from_url(myAvatar);
         firstImageMagick.scale(Magick::Geometry(height / 2, height / 2));
         if (IsImageAllBlack(firstImageMagick)) {
             firstImageMagick = InvertNonTransparentPixels(firstImageMagick);
         }
-        secondImageMagick = load_image_from_url(details.secondTeamLogoURL);
+        secondImageMagick = load_image_from_url(theirAvatar);
         secondImageMagick.scale(Magick::Geometry(height / 2, height / 2));
         if (IsImageAllBlack(secondImageMagick)) {
             secondImageMagick = InvertNonTransparentPixels(secondImageMagick);
@@ -998,7 +1032,7 @@ void writeSleeper(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config,
 
         offscreen = matrix->SwapOnVSync(offscreen);
         usleep(8 * 1000000); // Display for 5 seconds 5000000
-        if (current_scores["games"].size() == 0) {
+        if (current_scores.size() == 0) {
             noGames(matrix, offscreen, config, medium_font);
         }
     }
@@ -1113,6 +1147,7 @@ int main(int argc, char *argv[]) {
         } else if (mode == "clock") {
             writeClock(matrix, offscreen, large_font);
         } else if (mode == "sleeper") {
+            Magick::InitializeMagick(*argv);
             writeSleeper(matrix, offscreen, config, medium_font, small_font);
         } else {
             std::cerr << "Invalid mode selected. Use 'scoreboard' or 'logos'." << std::endl;

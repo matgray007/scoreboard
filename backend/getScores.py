@@ -159,7 +159,7 @@ def main(mode_arg = "", league_arg = ""):
     elif mode == "sleeper":
         yearAndWeek = sleeperHelpers.getYearAndWeek()
 
-        sleeperObj = sleeperHelpers.setup(config["sleeperUserID"], yearAndWeek["year"], yearAndWeek["week"], config["leagueID"] if config.get("leagueID") else None, CONFIG_FILE)
+        sleeperObj = sleeperHelpers.setup(config["sleeperUserID"], yearAndWeek["year"], yearAndWeek["week"], config["sleeperLeague"] if config.get("sleeperLeague") else None, CONFIG_FILE)
         if not sleeperObj:
             raise Exception("There are no leagues that are currently in season")
         if not config.get("sleeperLeague"):
@@ -192,7 +192,9 @@ def main(mode_arg = "", league_arg = ""):
             else:
                 last_news = curr
         elif mode == "sleeper":
-            curr = getSleeper(config["sleeperLeague"], yearAndWeek["week"], sleeperObj)
+            curr = {"matchup": []}
+            curr["matchup"] = getSleeper(config["sleeperLeague"], yearAndWeek["week"], sleeperObj)
+
         else:
             raise Exception(f"The mode passed in was not a recognized mode: {mode}")
                 
