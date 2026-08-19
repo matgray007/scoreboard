@@ -959,6 +959,51 @@ void watchNewsAndWriteClock(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Val
     delete[] newValues_;
 }
 
+void writeSleeper(RGBMatrix *matrix, FrameCanvas *offscreen, Json::Value config, 
+                 rgb_matrix::Font &medium_font, rgb_matrix::Font &small_font) {
+    int width_ = offscreen->width();
+    int height_ = offscreen->height();
+    Json::Value overallConfig = readConfig(); // This might not be needed
+    while (!interrupt_received && !sighup_received) {
+        // Read in currentScores.json
+        Json::Value current_scores = readScores();
+        // Loop through each game in current_scores
+        if (interrupt_received || sighup_received) {
+            break;
+        }
+        offscreen->Fill(0, 0, 0);
+
+        // Extract game details
+        GameDetails details = extractGameDetails(game, config);
+
+        // Write scores on bottom left and bottom right
+        writeScores(offscreen, details, large_font);
+
+
+        ImageVector firstImageVec, secondImageVec;
+        Magick::Image firstImageMagick, secondImageMagick;
+
+        firstImageMagick = load_image_from_url(details.firstTeamLogoURL);
+        firstImageMagick.scale(Magick::Geometry(height / 2, height / 2));
+        if (IsImageAllBlack(firstImageMagick)) {
+            firstImageMagick = InvertNonTransparentPixels(firstImageMagick);
+        }
+        secondImageMagick = load_image_from_url(details.secondTeamLogoURL);
+        secondImageMagick.scale(Magick::Geometry(height / 2, height / 2));
+        if (IsImageAllBlack(secondImageMagick)) {
+            secondImageMagick = InvertNonTransparentPixels(secondImageMagick);
+        }
+        CopyImageToCanvas(firstImageMagick, offscreen, 1, 1);
+        CopyImageToCanvas(secondImageMagick, offscreen, width - (height / 2) - 1, 1);
+
+        offscreen = matrix->SwapOnVSync(offscreen);
+        usleep(8 * 1000000); // Display for 5 seconds 5000000
+        if (current_scores["games"].size() == 0) {
+            noGames(matrix, offscreen, config, medium_font);
+        }
+    }
+}
+
 
 int main(int argc, char *argv[]) {
     std::cout << "Starting matrix" << std::endl;
@@ -1067,6 +1112,8 @@ int main(int argc, char *argv[]) {
             writeSpotify(matrix, offscreen, config, large_font, medium_font, small_font);
         } else if (mode == "clock") {
             writeClock(matrix, offscreen, large_font);
+        } else if (mode == "sleeper") {
+            writeSleeper(matrix, offscreen, config, medium_font, small_font);
         } else {
             std::cerr << "Invalid mode selected. Use 'scoreboard' or 'logos'." << std::endl;
             return 1;
