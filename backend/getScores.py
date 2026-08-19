@@ -24,27 +24,35 @@ Inputs:
     sport: string indicating which sport to get scores for (nfl or nba)
 '''
 def getScores(liveOnly, sport):
-    print("getting scores...")
-    if (sport == 'nba'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard')
-    elif (sport == 'wnba'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard')
-    elif (sport == 'nfl'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard')
-    elif (sport == 'mlb'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard')
-    elif (sport == 'nhl'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard')
-    elif (sport == 'ncaab'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard')
-    elif (sport == 'ncaaf'):
-        response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard')
-    elif (sport == 'fifa') :
-        response = requests.get('http://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard')
-    else:
-        response = {}
-    events = response.json()['events']
     json = {'games': []}
+    try:
+
+        if (sport == 'nba'):
+            response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard', timeout=(3.05, 10))
+        elif (sport == 'wnba'):
+            response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard', timeout=(3.05, 10))
+        elif (sport == 'nfl'):
+            response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard', timeout=(3.05, 10))
+        elif (sport == 'mlb'):
+            response = requests.get('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard', timeout=(3.05, 10))
+        elif (sport == 'nhl'):
+            response = requests.get('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard', timeout=(3.05, 10))
+        elif (sport == 'ncaab'):
+            response = requests.get('https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard', timeout=(3.05, 10))
+        elif (sport == 'ncaaf'):
+            response = requests.get('https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard', timeout=(3.05, 10))
+        elif (sport == 'fifa') :
+            response = requests.get('http://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard', timeout=(3.05, 10))
+        else:
+            response = {}
+    except requests.exceptions.Timeout:
+        print("getScores timed out", flush=True)
+        return json  # or {} / cached value
+    except requests.exceptions.RequestException as e:
+        print(f"getScores failed: {e}", flush=True)
+        return json
+    events = response.json()['events']
+    
     games = []
     for game in events:
         currObj = {'shortName': game['shortName'], 'status': game['status']['type']['state'], 'period': game['status']['period'] if 'period' in game['status'] else '', 'displayClock': game['status']['displayClock'], 'date': game['date'], 'competitors': []}
@@ -62,13 +70,19 @@ def getScores(liveOnly, sport):
 # TODO: Retain who has the ball, down and distance, and timeouts remaining
 
 def getNews(sport, limit):
-    if (sport == 'nba'):
-        response = requests.get(f'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news?limit={limit}')
-    elif (sport == 'nfl'):
-        response = requests.get(f'https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit={limit}')
-    else:
-        response = {}
+    print("Getting news ", flush=True)
     json = {'news': []}
+    try:
+        if (sport == 'nba'):
+            response = requests.get(f'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news?limit={limit}', timeout=(3.05, 10))
+        elif (sport == 'nfl'):
+            response = requests.get(f'https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit={limit}', timeout=(3.05, 10))
+        else:
+            response = {}
+    except:
+        print("The ESPN news api failed", flush=True)
+        return json
+    print("Successfully got the news", flush=True)
     news = []
     for article in response.json()['articles']:
         if (article["type"] in ["Media", "Story"]):
@@ -169,8 +183,11 @@ def main(mode_arg = "", league_arg = ""):
             curr = getNews(league, 100)
         elif mode == "breaking-news":
             curr = getNews(league, 1)
-            if (curr == last_news):
-                last_news = curr
+            print(curr, flush=True)
+            print(last_news)
+            print(curr == last_news)
+            print(len(curr["news"]) == 0, flush=True)
+            if (curr == last_news or len(curr["news"]) == 0): # if we've seen this news before OR the api failed, we do not want to update last_news nor display anything
                 curr = {"news": []}
             else:
                 last_news = curr

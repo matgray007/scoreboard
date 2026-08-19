@@ -12,7 +12,7 @@ import time
 
 app = FastAPI(
     servers = [
-        {"url": "http://10.0.0.6:8000", "description": "LED Matrix's webpage backend server"}
+        {"url": "http://localhost:8000", "description": "LED Matrix's webpage backend server"}
     ]
 )
 
