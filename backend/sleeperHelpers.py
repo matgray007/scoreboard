@@ -101,9 +101,10 @@ def setup(userID, year, week,   leagueID, CONFIG_FILE):
             config_file_path = os.path.join(os.path.dirname(__file__), CONFIG_FILE)
             with open(config_file_path, 'r') as config_file:
                 config = json.load(config_file)
-            config["sleeperLeague"] = leagueID
-            with open(config_file_path, 'w') as file:
-                file.write(dumps(config))
+            if not config["sleeperLeague"]: # If there isn't a league populated, set it to the first available
+                config["sleeperLeague"] = leagueID
+                with open(config_file_path, 'w') as file:
+                    file.write(dumps(config))
 
     
 
